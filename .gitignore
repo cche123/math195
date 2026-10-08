@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+audit_output/
+data/
+*.mp3
+*.zip

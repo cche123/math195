@@ -1,0 +1,61 @@
+{
+  "source_record": "https://zenodo.org/records/13939205",
+  "record_version_expected": "1.1.0",
+  "metadata_sha256": "7c7746debb0de9ce5f0432c008ebf4fb27efce016ff7242e3371e30e81b34edf",
+  "official_archive_md5_expected": "167f7ba80ab8eca8eee5a8668498a419",
+  "archive_md5_verified_this_run": false,
+  "counts": {
+    "all_audio": 3554,
+    "electronic_tagged": 543,
+    "provisional_dance_candidates": 92
+  },
+  "quadrants": {
+    "all_audio": {
+      "Q1": 875,
+      "Q2": 915,
+      "Q3": 808,
+      "Q4": 956
+    },
+    "electronic_tagged": {
+      "Q1": 175,
+      "Q2": 237,
+      "Q3": 46,
+      "Q4": 85
+    },
+    "provisional_dance_candidates": {
+      "Q1": 34,
+      "Q2": 35,
+      "Q3": 18,
+      "Q4": 5
+    }
+  },
+  "electronic_only_genres": 61,
+  "duplicate_artist_title_rows": 6,
+  "candidate_allowlist": [
+    "2-Step/British Garage",
+    "Acid House",
+    "Acid Techno",
+    "Ambient Breakbeat",
+    "Ambient Techno",
+    "Detroit Techno",
+    "Electro",
+    "Euro-Dance",
+    "Experimental Techno",
+    "Funky Breaks",
+    "Hardcore Techno",
+    "House",
+    "Jazz-House",
+    "Jungle/Drum'n'Bass",
+    "Left-Field House",
+    "Microhouse",
+    "Minimal Techno",
+    "Neo-Electro",
+    "Progressive House",
+    "Progressive Trance",
+    "Tech-House",
+    "Techno",
+    "Techno Bass",
+    "Trance"
+  ],
+  "interpretation": "Electronic is a metadata tag. Dance candidates are an earlier provisional rule, not a verified EDM sample. No manual exclusions are performed here."
+}
