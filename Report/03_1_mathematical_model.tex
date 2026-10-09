@@ -1,0 +1,165 @@
+\subsection{Mathematical Model}
+\label{sec:model}
+
+We specify two ridge regression models for the relationship between acoustic characteristics and emotional mood. For excerpt $i$, let $v_i$ and $a_i$ denote its supplied valence and arousal scores. We model these responses separately because a recording can combine low valence with high arousal. Separate response models allow the same acoustic characteristic to have different associations with emotional positivity and activation.
+
+\subsubsection{Predictors and responses}
+Let $n$ denote the number of eligible excerpts in the finalized sample, and let $\bm{x}_i\in\mathbb{R}^7$ contain the measurements listed in Table~\ref{tab:predictors}. These seven features were extracted in the preliminary analysis; final inclusion depends on the genre review and feature checks. No mood tags, quadrant labels, or other emotion-derived metadata will be used as predictors. The released numerical labels we inspected lie on a $[0,1]$ scale. We will preserve that scale and document it alongside the annotation procedure.
+
+\begin{table}[ht]
+\centering
+\caption{Initial acoustic predictors, computed from each excerpt.}
+\label{tab:predictors}
+\begin{tabular}{ll}
+\toprule
+Measurement & Musical interpretation \\
+\midrule
+Mean frame RMS amplitude & Typical signal amplitude \\
+Standard deviation of frame RMS & Variation in signal amplitude \\
+Mean spectral centroid (Hz) & Spectral brightness \\
+Power fraction in $20\leq f<250$ Hz & Bass-band content \\
+Mean positive spectral flux & Changes in spectral magnitude \\
+Detected onsets per second & Rate of detected sound attacks \\
+Estimated tempo (BPM) & Estimated beat rate \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+RMS amplitude describes signal amplitude and serves as an approximate loudness-related measurement. Estimated tempo is subject to beat-tracking errors. Bass-band content measures the proportion of spectrogram power in the stated frequency range. These quantities describe aspects of the audio; arousal remains a response label. Harmony and mode are possible later additions, but we have not yet validated features that would support claims about minor chords.
+
+\subsubsection{Defining the audio measurements}
+
+The preliminary extraction converts audio to mono at $22{,}050$ samples per second. It uses a short-time Fourier transform with a Hann window of length $N=2{,}048$ and a hop length of $512$ samples. Let $S_{kt}\geq0$ denote the resulting magnitude at frequency bin $k$ and frame $t$, with frequency $f_k$. Let $L$ be the number of frames and $T$ the excerpt duration in seconds.
+
+For the windowed samples $u_{t\ell}$ in a frame, its RMS amplitude is
+\begin{equation}
+ R_t=\sqrt{\frac{1}{N}\sum_{\ell=0}^{N-1}u_{t\ell}^2}.
+\end{equation}
+The extraction computes the equivalent quantity from the spectrogram. Its two summaries are
+\begin{equation}
+ \overline R=\frac{1}{L}\sum_{t=1}^{L}R_t,
+ \qquad
+ s_R=\sqrt{\frac{1}{L}\sum_{t=1}^{L}(R_t-\overline R)^2}.
+\end{equation}
+Here $s_R$ is a population standard deviation across frames. Both measurements depend on the recording's amplitude scale and production, which matters when comparing mastered tracks.
+
+The spectral centroid for a non-silent frame is
+\begin{equation}
+ C_t=\frac{\sum_k f_k S_{kt}}{\sum_k S_{kt}},
+ \qquad \overline C=\frac{1}{L}\sum_{t=1}^{L}C_t.
+\end{equation}
+Silent frames are assigned centroid zero in the extraction. Larger values indicate that spectral magnitude is concentrated at higher frequencies. The bass-band fraction is
+\begin{equation}
+ B=\frac{\sum_t\sum_{k:\,20\leq f_k<250}S_{kt}^2}
+ {\sum_t\sum_k S_{kt}^2}.
+\end{equation}
+The implementation adds a small constant to the denominator to handle near-silence. Positive spectral flux is summarized by
+\begin{equation}
+ F=\frac{1}{L-1}\sum_{t=2}^{L}\sum_k
+ \max\{S_{kt}-S_{k,t-1},0\}.
+\end{equation}
+This particular flux measure uses unnormalized spectral magnitudes, so amplitude changes can affect it. We will inspect its correlation with the RMS features before interpreting its coefficient.
+
+If the onset detector identifies $D$ attacks, the onset-rate feature is $D/T$. The tempo estimate is the beat-rate estimate returned by the audio analysis algorithm, measured in BPM. Onset rate and tempo describe different aspects of rhythm: a recording can contain several detected attacks within one beat. We will inspect beat-tracking errors, including estimates at half or twice a plausible tempo. All case-study excerpts will use this same feature-extraction procedure.
+
+For training-set size $m$, define the standardized predictor
+\begin{equation}
+ z_{ij}=\frac{x_{ij}-\mu_j}{s_j},
+ \qquad j=1,\ldots,p,
+\end{equation}
+where $\mu_j=m^{-1}\sum_{i=1}^m x_{ij}$ and $s_j=\{m^{-1}\sum_{i=1}^m(x_{ij}-\mu_j)^2\}^{1/2}$ are the training mean and standard deviation. Constant predictors are removed, so $p\leq7$. The same training values are used to transform held-out songs. A coefficient $\beta_{jr}$ therefore represents the fitted change in response $r$ associated with a one-training-standard-deviation increase in predictor $j$, holding the other standardized predictors fixed.
+
+\subsubsection{Ridge estimation}
+
+Ridge regression adds a squared-coefficient penalty to least squares; van Wieringen reviews this framework and its properties \cite{vanwieringen2026ridge}. Below we derive the estimator using our chosen normalization of the loss.
+For response index $r\in\{v,a\}$, define $y_{iv}=v_i$ and $y_{ia}=a_i$. The model is
+\begin{equation}
+ y_{ir}=\beta_{0r}+\bm{z}_i^{\mathsf T}\bm{\beta}_r+\varepsilon_{ir}.
+ \label{eq:linear}
+\end{equation}
+We estimate the coefficients by minimizing
+\begin{equation}
+ (\widehat\beta_{0r},\widehat{\bm\beta}_r)
+ =\operatorname*{arg\,min}_{b,\bm\beta}
+ \left\{\frac{1}{m}\sum_{i=1}^{m}
+ (y_{ir}-b-\bm z_i^{\mathsf T}\bm\beta)^2
+ +\lambda_r\lVert\bm\beta\rVert_2^2\right\},\qquad\lambda_r>0.
+ \label{eq:ridge}
+\end{equation}
+The intercept is unpenalized. The penalty limits coefficient size, which is useful because measurements such as amplitude and onset activity may be correlated. Equation~\eqref{eq:linear} is a linear approximation to the relationship between the chosen measurements and the supplied labels. The residual term includes both variation not captured by these predictors and error in the measurements or labels.
+
+\begin{prop}
+For any $\lambda_r>0$, problem~\eqref{eq:ridge} has a unique solution, even if the standardized predictors are linearly dependent.
+\end{prop}
+\begin{proof}
+Let $Z$ be the $m\times p$ training matrix with centered columns and let $\bm y_{c,r}=\bm y_r-\bar y_r\bm 1$. The derivative with respect to the intercept is $-2m^{-1}\sum_i(y_{ir}-b-\bm z_i^{\mathsf T}\bm\beta)$. Since $\sum_i\bm z_i=\bm0$, setting it to zero gives $\widehat\beta_{0r}=\bar y_r$. The normal equations for the remaining coefficients are
+\[
+ (Z^{\mathsf T}Z+m\lambda_r I_p)\widehat{\bm\beta}_r
+ =Z^{\mathsf T}\bm y_{c,r}.
+\]
+For every nonzero $\bm u\in\mathbb R^p$,
+\[
+ \bm u^{\mathsf T}(Z^{\mathsf T}Z+m\lambda_r I_p)\bm u
+ =\lVert Z\bm u\rVert_2^2+m\lambda_r\lVert\bm u\rVert_2^2>0.
+\]
+The matrix is positive definite and invertible. Thus
+\[
+ \widehat{\bm\beta}_r
+ =(Z^{\mathsf T}Z+m\lambda_r I_p)^{-1}Z^{\mathsf T}\bm y_{c,r},
+\]
+and both the coefficient vector and intercept are unique.
+\end{proof}
+
+\begin{prop}
+Let $q=\operatorname{rank}(Z)$ and let $Z=UDV^{\mathsf T}$ be a compact singular value decomposition, where $U\in\mathbb R^{m\times q}$ and $V\in\mathbb R^{p\times q}$ have orthonormal columns and $D=\operatorname{diag}(d_1,\ldots,d_q)$ has positive entries. Then the fitted centered training response satisfies
+\begin{equation}
+ Z\widehat{\bm\beta}_r
+ =U\,\operatorname{diag}\!\left(
+ \frac{d_\ell^2}{d_\ell^2+m\lambda_r}
+ \right)_{\ell=1}^{q}U^{\mathsf T}\bm y_{c,r}.
+\end{equation}
+Each represented direction is shrunk by a factor strictly between zero and one. The factors approach zero as $\lambda_r$ tends to infinity.
+\end{prop}
+\begin{proof}
+Substitute $Z=UDV^{\mathsf T}$ into the ridge solution. On the column space of $V$, the matrix $Z^{\mathsf T}Z+m\lambda_r I_p$ acts as $D^2+m\lambda_r I_q$. Multiplying the solution on the left by $Z$ therefore gives
+\[
+ Z\widehat{\bm\beta}_r
+ =UD(D^2+m\lambda_r I_q)^{-1}DU^{\mathsf T}\bm y_{c,r}.
+\]
+The diagonal entries are $d_\ell^2/(d_\ell^2+m\lambda_r)$. Positivity of $d_\ell$ and $\lambda_r$ proves the stated bounds and limit. If $Z$ has rank zero, the centered fitted response is zero.
+\end{proof}
+
+The shrinkage formula gives a direct interpretation of the regularization penalty. Directions with small singular values receive stronger shrinkage at the same penalty value. Increasing the penalty eventually brings predictions toward the training-mean intercept. We will choose the penalty through validation because the best balance between flexibility and stability depends on the data.
+
+\subsubsection{Evaluation and interpretation}
+We will use grouped cross-validation, keeping excerpts and repeated versions of the same recording together. Artist-held-out evaluation will help assess whether patterns extend beyond artists represented in training. Within each outer training fold, an inner grouped validation procedure will choose $\lambda_r$ from the grid $\{10^{-4},10^{-3},\ldots,10^4\}$. Feature scaling and any imputation will be fitted inside the corresponding training fold. The number of folds will be chosen after checking the number of eligible groups. No case-study excerpts will be used to tune the models.
+
+For held-out predictions, we will report
+\begin{equation}
+ \mathrm{RMSE}_r=
+ \sqrt{\frac{1}{n_{\mathrm{test}}}\sum_{i\in\mathrm{test}}
+ (y_{ir}-\widehat y_{ir})^2}.
+\end{equation}
+We will compare this error with a baseline that predicts the outer training mean. Ridge predictions can fall outside $[0,1]$; we will report their frequency and evaluate the raw predictions consistently. Coefficients will be summarized across outer folds to show whether their signs and magnitudes are stable. To assess predictive usefulness, we will also refit and retune models with each feature family omitted, using the same outer folds. Correlated predictors can substitute for one another, so a small error change does not establish that a musical characteristic is irrelevant.
+
+We will group the predictors into amplitude ($\overline R,s_R$), rhythm (onset rate and tempo), spectral change and brightness ($F,\overline C$), and bass-band content ($B$). For family $g$, define the held-out error change
+\begin{equation}
+ \Delta_{g,r}=\mathrm{RMSE}_{r,-g}-\mathrm{RMSE}_{r,\mathrm{full}}.
+\end{equation}
+A positive value indicates that omitting the family worsens prediction under the stated evaluation procedure. We will report the changes across folds as well as the aggregate value. A negative value is possible if the omitted features add noise or do not generalize. These comparisons will complement coefficient summaries rather than provide a ranking of causal effects.
+
+We will also report out-of-fold $R^2$:
+\begin{equation}
+ R^2_r=1-\frac{\sum_i(y_{ir}-\widehat y^{\mathrm{OOF}}_{ir})^2}
+ {\sum_i(y_{ir}-\bar y_r)^2},
+\end{equation}
+provided the response has nonzero variation. Here each prediction is obtained from an outer model that did not train on that example, and $\bar y_r$ is the mean of the evaluated responses. This statistic can be negative and is not a classification accuracy. The training-mean baseline will still be evaluated separately in every outer fold, since it is the deployable constant predictor for that fold.
+
+\subsubsection{Case-study predictions}
+After evaluation, the model will be refitted on the eligible study sample using grouped validation to select its penalty. The case-study recordings will remain excluded from all training and tuning. For a case-study excerpt $\ast$, define $c_{jr}=\widehat\beta_{jr}z_{\ast j}$. Then
+\begin{equation}
+ \widehat y_{\ast r}-\widehat\beta_{0r}
+ =\sum_{j=1}^{p}c_{jr}.
+ \label{eq:contributions}
+\end{equation}
+This identity gives an exact decomposition of the fitted linear prediction relative to its training-mean intercept. A negative valence contribution indicates that a measured feature lowers the model's prediction for that excerpt. The contribution describes an association within the fitted model. Establishing a causal effect of changing the musical characteristic would require an experimental design beyond the scope of this study. Each case study will use a prespecified excerpt of approximately 30 seconds, identified by its timestamp before model predictions are inspected. We will check whether its standardized features lie within the observed training ranges and compare the predicted valence and arousal with an independently written listening description. We will report the intercept, individual feature contributions, and residual difference if a comparable emotion annotation is available. An informal description alone will not be treated as a numerical ground-truth score. Prediction errors will remain part of the case-study analysis and will be discussed in relation to the coverage of the feature set and the training sample.

@@ -2,6 +2,21 @@
 
 Research question: Which musical characteristics help explain the emotional mood of EDM?
 
+
+## Report sections
+
+The report asks which musical characteristics help explain the emotional mood of EDM.
+
+- [Section 2: Background and Literature Review](Report/02_background_and_literature_review.tex)
+- [Section 3.1: Mathematical Model](Report/03_1_mathematical_model.tex)
+- [Section 3.2: Preliminary Data Selection Audit](Report/03_2_data_selection_audit.tex)
+- [Bibliography](Report/references.bib)
+
+The LaTeX sections contain academic prose and section headings, with no paste instructions. The literature review is a developed draft for continued revision. The mathematical framework specifies acoustic measurements, separate valence and arousal ridge models, two propositions with proofs, grouped evaluation, feature-family comparisons, and case-study prediction contributions. Model fitting and the final EDM sample review remain upcoming work.
+
+The sections were checked together using the instructor template's class, font, margins and theorem definitions. The local check used BibTeX because biblatex is unavailable in the runtime; Overleaf can retain the original biblatex configuration. All nine citation keys resolved without layout warnings.
+
+
 ## Correcting the earlier count
 
 The recovered MERGE Audio Complete metadata (Zenodo record 13939205, version 1.1.0) contains **3,554 excerpt records**. An exact `Electronic` token in the comma-separated `Genres` field selects **543**, including tracks with several genres. This is not 543 verified EDM songs. The earlier 542 count is not supported by the reproduced filter and should be corrected; there is no documented one-record exclusion to justify it.
