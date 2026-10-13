@@ -1,0 +1,20 @@
+[
+  {
+    "Song": "MT0030234774",
+    "Artist": "The Prodigy",
+    "Title": "We Are the Ruffest",
+    "Quadrant": "Q2",
+    "largest_adjacent_amplitude_rise_db": 24.34053198314848,
+    "largest_rise_boundary_seconds": 2.995201814058957,
+    "selection": "Two largest adjacent-bin amplitude increases; descriptive examples only; no section annotations"
+  },
+  {
+    "Song": "MT0002485672",
+    "Artist": "Fennesz",
+    "Title": "Transit",
+    "Quadrant": "Q3",
+    "largest_adjacent_amplitude_rise_db": 17.32615074039129,
+    "largest_rise_boundary_seconds": 3.006,
+    "selection": "Two largest adjacent-bin amplitude increases; descriptive examples only; no section annotations"
+  }
+]

@@ -1,0 +1,9 @@
+\section{Conclusion}
+
+We applied an interpretable regression framework to investigate the relationship between acoustic characteristics and supplied emotional mood scores in a provisional EDM-focused sample. The seven-feature ridge model improved arousal prediction modestly under artist-credit-group evaluation, while valence prediction did not improve over the training-mean baseline. Spectral brightness and spectral change showed the clearest predictive contribution for arousal. Their removal worsened arousal prediction across all five outer folds.
+
+The distinction between activation and positivity is central to our interpretation. Our results suggest that some measured aspects of sound texture carry information about activation in this selected sample, but the same measurements provide an incomplete account of emotional positivity. Adding five coarse temporal descriptors did not yield a consistent improvement across alternative group splits. This limits what we can infer about emotional information in a song's changing structure from short excerpts with static labels.
+
+The next phase requires finalizing the EDM inclusion decisions and annotating the structure of the two chosen case-study recordings. The code is prepared to measure confirmed sections and to decompose differences in model predictions into feature contributions. Any claim about sadness during a particular section will require a listening description or annotation appropriate to that section. Additional harmony, melody, or source-specific measurements may extend the analysis, but they should be evaluated with the same separation of training, tuning, and held-out prediction.
+
+These results provide a reproducible initial answer to the research question and identify where the current feature set succeeds and where it remains insufficient. The study is exploratory, and its conclusions are limited to the documented sample and label construction.

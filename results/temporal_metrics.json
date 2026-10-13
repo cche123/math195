@@ -1,0 +1,50 @@
+{
+  "status": "exploratory extension added after examining primary results; no section annotations or dynamic emotion labels",
+  "temporal_features": [
+    "amplitude_time_slope",
+    "brightness_time_slope",
+    "largest_adjacent_amplitude_rise_db",
+    "largest_adjacent_bass_change",
+    "onset_rate_time_slope"
+  ],
+  "feature_recomputation_max_abs_difference": {
+    "rms_mean": 0.0,
+    "rms_sd": 0.0,
+    "centroid_hz": 0.0,
+    "bass_power_fraction": 0.0,
+    "spectral_flux_mean": 0.0,
+    "onsets_per_second": 0.0,
+    "tempo_bpm_estimate": 0.0
+  },
+  "responses": {
+    "Valence": {
+      "rmse": 0.1862581653492713,
+      "mae": 0.1643633736596535,
+      "r2": -0.04532948991034891,
+      "out_of_range": 0,
+      "rmse_change_vs_primary": -0.0010307153008549397
+    },
+    "Arousal": {
+      "rmse": 0.09264270656206203,
+      "mae": 0.06684910886694073,
+      "r2": 0.12602094958266763,
+      "out_of_range": 0,
+      "rmse_change_vs_primary": -0.00042381531365008607
+    }
+  },
+  "interior_responses": {
+    "Valence": {
+      "rmse": 0.1835497570407294,
+      "mae": 0.16201931035317216,
+      "r2": -0.015149929539248763,
+      "out_of_range": 0
+    },
+    "Arousal": {
+      "rmse": 0.09761422746601217,
+      "mae": 0.07313789673620008,
+      "r2": 0.029702758589521205,
+      "out_of_range": 0
+    }
+  },
+  "interior_status": "post-hoc boundary sensitivity; omit first and last bins"
+}

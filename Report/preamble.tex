@@ -1,0 +1,76 @@
+% Copyright 2025 by Lernik Asserian
+% This file may be distributed and/or modified.
+
+\documentclass[11pt,letterpaper,reqno]{amsart}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xspace}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{setspace}
+\usepackage[letterpaper,margin=1in,headheight=15pt]{geometry}
+\usepackage{bm}
+\usepackage{hyperref}
+\definecolor{hyperlinkblue}{rgb}{0,0,238}
+\hypersetup{colorlinks=true,urlcolor=hyperlinkblue,linkcolor=hyperlinkblue,citecolor=hyperlinkblue}
+\allowdisplaybreaks
+
+% Makes the subsection go onto a new line
+% \makeatletter
+% \def\subsection{\@startsection{subsection}{2}%
+%   \z@{.5\linespacing\@plus.7\linespacing}{.5\linespacing}%
+%   {\normalfont\bfseries}}
+% \makeatother
+
+% Customizing the inclusion of codes in Appendix
+\usepackage{listings}
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{lightgray!20}, % A light gray background
+    commentstyle=\color{green!60!black},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{gray},
+    stringstyle=\color{purple},
+    basicstyle=\fontfamily{pcr}\selectfont\footnotesize, % Use a courier-like font
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+\numberwithin{equation}{subsection}
+\newtheorem{thm}{Theorem}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{cor}[thm]{Corollary}
+\theoremstyle{definition}
+\newtheorem{Example}[thm]{Example}
+\newtheorem{Definition}[thm]{Definition}
+\numberwithin{thm}{subsection}
+\newtheorem{problem}{Problem}
+
+% labeling of figures and tables
+\newcounter{figtab}[subsection]
+\setcounter{figtab}{0}
+\makeatletter
+\@addtoreset{figure}{subsection}
+\@addtoreset{table}{subsection}
+\makeatother
+\renewcommand{\thefigure}{\thesubsection.\arabic{figtab}}
+\renewcommand{\thetable}{\thesubsection.\arabic{figtab}}
+\let\oldfigure\figure
+\def\figure[#1]{\oldfigure[#1]\stepcounter{figtab}}
+\let\oldtable\table
+\def\table[#1]{\oldtable[#1]\stepcounter{figtab}}
+
+\usepackage{biblatex}
+\addbibresource{references.bib}
+

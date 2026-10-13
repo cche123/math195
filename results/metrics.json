@@ -1,0 +1,105 @@
+{
+  "sample_status": "provisional dance-style candidates, not manually verified EDM",
+  "n": 92,
+  "artist_credit_groups": 63,
+  "duplicate_artist_title_rows": 0,
+  "features": [
+    "rms_mean",
+    "rms_sd",
+    "centroid_hz",
+    "bass_power_fraction",
+    "spectral_flux_mean",
+    "onsets_per_second",
+    "tempo_bpm_estimate"
+  ],
+  "families": {
+    "Amplitude": [
+      "rms_mean",
+      "rms_sd"
+    ],
+    "Rhythm": [
+      "onsets_per_second",
+      "tempo_bpm_estimate"
+    ],
+    "Brightness/change": [
+      "centroid_hz",
+      "spectral_flux_mean"
+    ],
+    "Bass band": [
+      "bass_power_fraction"
+    ]
+  },
+  "lambda_grid": [
+    0.0001,
+    0.001,
+    0.01,
+    0.1,
+    1.0,
+    10.0,
+    100.0,
+    1000.0,
+    10000.0
+  ],
+  "outer_folds": 5,
+  "inner_folds": 3,
+  "seed": 195,
+  "input_sha256": "a4108cf7d4a1cdce561f83829fa2c7ee44455551468de4a0a1f64e10297056ea",
+  "python": "3.12.14",
+  "numpy": "2.3.5",
+  "pandas": "2.2.3",
+  "sklearn": "1.8.0",
+  "quadrants": {
+    "Q1": 34,
+    "Q2": 35,
+    "Q3": 18,
+    "Q4": 5
+  },
+  "responses": {
+    "Valence": {
+      "ridge": {
+        "rmse": 0.18728888065012625,
+        "mae": 0.16512716034158234,
+        "r2": -0.05693078811900931,
+        "out_of_range": 0,
+        "equal_group_rmse": 0.19414183955248385
+      },
+      "training_mean": {
+        "rmse": 0.18281532012778937,
+        "mae": 0.1611866175053409,
+        "r2": -0.007042351712684303,
+        "out_of_range": 0,
+        "equal_group_rmse": 0.1903418617524684
+      },
+      "ols": {
+        "rmse": 0.19352373283377733,
+        "mae": 0.1637296524200258,
+        "r2": -0.12847261851985148,
+        "out_of_range": 0,
+        "equal_group_rmse": 0.20146070722219714
+      }
+    },
+    "Arousal": {
+      "ridge": {
+        "rmse": 0.09306652187571211,
+        "mae": 0.06817759936527445,
+        "r2": 0.11800622350030354,
+        "out_of_range": 0,
+        "equal_group_rmse": 0.10113474145744374
+      },
+      "training_mean": {
+        "rmse": 0.09916895100891018,
+        "mae": 0.07255867409195896,
+        "r2": -0.0014516635099734998,
+        "out_of_range": 0,
+        "equal_group_rmse": 0.1073829804837175
+      },
+      "ols": {
+        "rmse": 0.09451121009302108,
+        "mae": 0.06897751970524235,
+        "r2": 0.09041099689479837,
+        "out_of_range": 0,
+        "equal_group_rmse": 0.10172976822691014
+      }
+    }
+  }
+}

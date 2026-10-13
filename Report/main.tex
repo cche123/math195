@@ -1,0 +1,108 @@
+% Copyright 2025 by Lernik Asserian
+% This file may be distributed and/or modified.
+
+\documentclass[11pt,letterpaper,reqno]{amsart}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xspace}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{setspace}
+\usepackage[letterpaper,margin=1in,headheight=15pt]{geometry}
+\usepackage{bm}
+\usepackage{hyperref}
+\definecolor{hyperlinkblue}{rgb}{0,0,238}
+\hypersetup{colorlinks=true,urlcolor=hyperlinkblue,linkcolor=hyperlinkblue,citecolor=hyperlinkblue}
+\allowdisplaybreaks
+
+% Makes the subsection go onto a new line
+% \makeatletter
+% \def\subsection{\@startsection{subsection}{2}%
+%   \z@{.5\linespacing\@plus.7\linespacing}{.5\linespacing}%
+%   {\normalfont\bfseries}}
+% \makeatother
+
+% Customizing the inclusion of codes in Appendix
+\usepackage{listings}
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{lightgray!20}, % A light gray background
+    commentstyle=\color{green!60!black},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{gray},
+    stringstyle=\color{purple},
+    basicstyle=\fontfamily{pcr}\selectfont\footnotesize, % Use a courier-like font
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+\numberwithin{equation}{subsection}
+\newtheorem{thm}{Theorem}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{cor}[thm]{Corollary}
+\theoremstyle{definition}
+\newtheorem{Example}[thm]{Example}
+\newtheorem{Definition}[thm]{Definition}
+\numberwithin{thm}{subsection}
+\newtheorem{problem}{Problem}
+
+% labeling of figures and tables
+\newcounter{figtab}[subsection]
+\setcounter{figtab}{0}
+\makeatletter
+\@addtoreset{figure}{subsection}
+\@addtoreset{table}{subsection}
+\makeatother
+\renewcommand{\thefigure}{\thesubsection.\arabic{figtab}}
+\renewcommand{\thetable}{\thesubsection.\arabic{figtab}}
+\let\oldfigure\figure
+\def\figure[#1]{\oldfigure[#1]\stepcounter{figtab}}
+\let\oldtable\table
+\def\table[#1]{\oldtable[#1]\stepcounter{figtab}}
+
+\usepackage{biblatex}
+\addbibresource{references.bib}
+
+
+\title{Acoustic Characteristics and Emotional Mood in Electronic Dance Music}
+\author{Caden Che and Kevin Zuniga}
+\thanks{Exploratory analysis prepared for MATH 195, Stanford University.}
+\begin{document}
+\onehalfspacing
+\begin{abstract}
+We investigate which musical characteristics help explain the emotional mood of electronic dance music using 92 provisional dance-style candidates from MERGE Audio Complete. Seven interpretable acoustic features predict supplied valence and arousal scores through separate ridge regressions evaluated using nested artist-credit-group cross-validation. Arousal RMSE decreases from 0.0992 for a training-mean baseline to 0.0931, with out-of-fold $R^2=0.118$. Valence prediction does not improve over the baseline. Spectral brightness and spectral change provide the clearest contribution to arousal prediction. An exploratory temporal extension yields small, split-dependent changes in error. The results concern a provisional sample and static supplied labels; verified full-song section analysis and personal case studies remain future work.
+\end{abstract}
+\maketitle
+\input{01_introduction}
+\input{02_background_and_literature_review}
+\section{Methodology and Technical Implementation}
+\input{03_1_mathematical_model}
+\input{03_2_data_selection_audit}
+\input{03_3_implementation}
+\input{03_4_results}
+\input{04_conclusion}
+\printbibliography
+\appendix
+\section{Supplementary Descriptive Figures}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.75\linewidth]{figures/05_descriptive_correlations.pdf}
+\caption{Descriptive Pearson correlations between the seven acoustic features and supplied labels. These correlations do not adjust for sample composition or artist-credit groups.}
+\end{figure}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\linewidth]{figures/06_split_sensitivity.pdf}
+\caption{Changes in error relative to each split's training-mean baseline. Positive values favor ridge. The ten evaluations reuse the same observations.}
+\end{figure}
+\end{document}

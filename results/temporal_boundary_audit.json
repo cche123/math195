@@ -1,0 +1,17 @@
+{
+  "n": 92,
+  "largest_rise_after_first_bin": 69,
+  "largest_rise_before_last_bin": 1,
+  "boundary_index_counts": {
+    "0": 69,
+    "1": 4,
+    "2": 4,
+    "3": 4,
+    "4": 3,
+    "5": 4,
+    "6": 2,
+    "7": 1,
+    "8": 1
+  },
+  "interpretation": "Positions near excerpt edges can reflect editing/fades; no musical section labels are inferred."
+}
