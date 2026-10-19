@@ -75,7 +75,7 @@ python -m unittest discover -s tests -v
 python scripts/run_all.py
 ```
 
-The included feature tables allow the numerical results and figures to be reproduced without downloading audio. The pipeline saves predictions, evaluation summaries, coefficients, and figures. It refreshes the pilot results section while preserving the manually edited introduction, literature review, mathematical model, conclusion, and main report file.
+The included feature tables allow the numerical results and figures to be reproduced without downloading audio. Running the pipeline updates the pilot predictions, evaluation summaries, figures, and results section.
 
 To download the official audio and recompute the pilot features:
 
