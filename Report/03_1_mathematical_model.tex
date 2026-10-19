@@ -1,10 +1,12 @@
 \subsection{Mathematical Model}
 \label{sec:model}
 
-We fit two ridge regression models for the relationship between acoustic characteristics and emotional mood. For excerpt $i$, let $v_i$ and $a_i$ denote its supplied valence and arousal scores. We model these responses separately because a recording can combine low valence with high arousal. Separate response models allow the same acoustic characteristic to have different associations with emotional positivity and activation.
+We relate acoustic measurements to supplied valence and arousal scores. We fit a separate model for each response because a recording can have a negative emotional character and high activation at the same time. Ordinary least squares is our starting point, and ridge regression adds a penalty that can make the fitted coefficients less sensitive to related predictors.
+
+The completed pilot uses the earlier 92-recording selection. The framework also applies to the revised question across genres, but the broader sample still needs to be prepared and evaluated. A sequence-model extension is proposed below.
 
 \subsubsection{Predictors and responses}
-Let $n$ denote the number of eligible excerpts in the finalized sample, and let $\bm{x}_i\in\mathbb{R}^7$ contain the measurements listed in Table~\ref{tab:predictors}. These seven features were extracted in the preliminary analysis; final inclusion depends on the genre review and feature checks. No mood tags, quadrant labels, or other emotion-derived metadata will be used as predictors. The released numerical labels we inspected lie on a $[0,1]$ scale. We will preserve that scale and document it alongside the annotation procedure.
+Let $n$ denote the number of eligible excerpts in the finalized sample, and let $\bm{x}_i\in\mathbb{R}^7$ contain the measurements listed in Table~\ref{tab:predictors}. These seven features were extracted in the preliminary analysis; final inclusion depends on audio availability, label checks, and review of repeated recordings. No mood tags, quadrant labels, or other emotion-derived metadata will be used as predictors. The released numerical labels we inspected lie on a $[0,1]$ scale. We will preserve that scale and document it alongside the annotation procedure.
 
 \begin{table}[ht]
 \centering
@@ -69,6 +71,29 @@ For training-set size $m$, define the standardized predictor
 \end{equation}
 where $\mu_j=m^{-1}\sum_{i=1}^m x_{ij}$ and $s_j=\{m^{-1}\sum_{i=1}^m(x_{ij}-\mu_j)^2\}^{1/2}$ are the training mean and standard deviation. Constant predictors are removed, so $p\leq7$. The same training values are used to transform held-out songs. A coefficient $\beta_{jr}$ therefore represents the fitted change in response $r$ associated with a one-training-standard-deviation increase in predictor $j$, holding the other standardized predictors fixed.
 
+\subsubsection{Ordinary least squares}
+
+For either response, let $y_i$ denote the supplied score for recording $i$. Our initial model is
+\begin{equation}
+y_i=\beta_0+\sum_{j=1}^{p}\beta_jz_{ij}+\varepsilon_i.
+\end{equation}
+The intercept describes the prediction at the training-average feature values. Each coefficient describes the change in prediction associated with a one-standard-deviation increase in a feature, with the other included features fixed. The residual captures variation that the model does not explain.
+
+Ordinary least squares chooses coefficients to minimize
+\begin{equation}
+\frac{1}{m}\sum_{i=1}^{m}
+\left(y_i-\beta_0-\sum_{j=1}^{p}\beta_jz_{ij}\right)^2.
+\end{equation}
+This gives larger errors more weight and prevents positive and negative errors from canceling. With centered response vector $\bm y_c$ and standardized feature matrix $Z$, the coefficient equations are
+\[
+Z^{\mathsf T}Z\widehat{\bm\beta}=Z^{\mathsf T}\bm y_c.
+\]
+If the predictors are linearly independent, their solution is
+\[
+\widehat{\bm\beta}=(Z^{\mathsf T}Z)^{-1}Z^{\mathsf T}\bm y_c.
+\]
+The implementation uses a numerical least-squares solver rather than explicitly computing this inverse. Correlated measurements can make the coefficients unstable, which motivates the ridge model.
+
 \subsubsection{Ridge estimation}
 
 Ridge regression adds a squared-coefficient penalty to least squares; van Wieringen reviews this framework and its properties \cite{vanwieringen2026ridge}. Below we derive the estimator using our chosen normalization of the loss.
@@ -110,29 +135,29 @@ The matrix is positive definite and invertible. Thus
 and both the coefficient vector and intercept are unique.
 \end{proof}
 
-\begin{prop}
-Let $q=\operatorname{rank}(Z)$ and let $Z=UDV^{\mathsf T}$ be a compact singular value decomposition, where $U\in\mathbb R^{m\times q}$ and $V\in\mathbb R^{p\times q}$ have orthonormal columns and $D=\operatorname{diag}(d_1,\ldots,d_q)$ has positive entries. Then the fitted centered training response satisfies
-\begin{equation}
- Z\widehat{\bm\beta}_r
- =U\,\operatorname{diag}\!\left(
- \frac{d_\ell^2}{d_\ell^2+m\lambda_r}
- \right)_{\ell=1}^{q}U^{\mathsf T}\bm y_{c,r}.
-\end{equation}
-Each represented direction is shrunk by a factor strictly between zero and one. The factors approach zero as $\lambda_r$ tends to infinity.
-\end{prop}
-\begin{proof}
-Substitute $Z=UDV^{\mathsf T}$ into the ridge solution. On the column space of $V$, the matrix $Z^{\mathsf T}Z+m\lambda_r I_p$ acts as $D^2+m\lambda_r I_q$. Multiplying the solution on the left by $Z$ therefore gives
-\[
- Z\widehat{\bm\beta}_r
- =UD(D^2+m\lambda_r I_q)^{-1}DU^{\mathsf T}\bm y_{c,r}.
-\]
-The diagonal entries are $d_\ell^2/(d_\ell^2+m\lambda_r)$. Positivity of $d_\ell$ and $\lambda_r$ proves the stated bounds and limit. If $Z$ has rank zero, the centered fitted response is zero.
-\end{proof}
+The penalty shrinks feature coefficients toward zero. A larger penalty brings predictions closer to the training-mean intercept. This can reduce sensitivity to the training sample, although too much shrinkage can remove useful information. We select the penalty through validation. With the average-error convention in Equation~\eqref{eq:ridge}, software using a sum-of-errors objective requires $\alpha=m\lambda_r$.
 
-The shrinkage formula gives a direct interpretation of the regularization penalty. Directions with small singular values receive stronger shrinkage at the same penalty value. Increasing the penalty eventually brings predictions toward the training-mean intercept. We chose the penalty through validation because the best balance between flexibility and stability depends on the data.
+\subsubsection{A proposed LSTM extension}
+
+Excerpt-level summaries do not preserve the order of acoustic changes. A recording that gradually becomes louder can have a similar mean amplitude to one that starts loudly and becomes quiet. To examine whether that order improves prediction, we propose a long short-term memory network, or LSTM \cite{hochreiter1997lstm}.
+
+Each recording would be divided into consecutive windows, with a feature vector $\bm z_{it}$ for window $t$. The model updates a hidden representation and memory state:
+\[
+(\bm h_{it},\bm c_{it})
+=
+\operatorname{LSTM}_{\theta}
+(\bm z_{it},\bm h_{i,t-1},\bm c_{i,t-1}).
+\]
+These states allow earlier measurements to influence the final representation. Two output layers would then predict the overall responses:
+\[
+\widehat v_i=b_v+\bm w_v^{\mathsf T}\bm h_{iT},
+\qquad
+\widehat a_i=b_a+\bm w_a^{\mathsf T}\bm h_{iT}.
+\]
+Training would minimize the average squared error across both responses. The model has not yet been trained. All windows from one recording will remain in the same evaluation group, and preprocessing will use training data only. With static labels, this tests prediction of overall emotion scores; it does not validate emotion predictions for individual windows.
 
 \subsubsection{Evaluation and interpretation}
-We used five outer folds and three inner folds, grouping observations by complete artist-credit strings after normalizing whitespace and letter case. The sample contains 63 such groups. No artist-credit group appears in both training and validation or test data within a split. The primary outer split uses random seed 195. Inner grouped validation selected $\lambda_r$ from $\{10^{-4},10^{-3},\ldots,10^4\}$ by pooled validation mean squared error. Feature means and scales were fitted separately within each training fold. All predictors were finite, so no imputation was required. Aliases and overlapping personnel across different artist credits were not resolved, which limits the strength of the artist-disjoint interpretation. The personal case studies were not used in model selection.
+The completed pilot used five outer folds and three inner folds, grouping observations by complete artist-credit strings after normalizing whitespace and letter case. The pilot contains 63 such groups. We will rebuild the groups for the broader sample and use the same evaluation design where sample size permits. No artist-credit group appears in both training and validation or test data within a split. The primary outer split uses random seed 195. Inner grouped validation selected $\lambda_r$ from $\{10^{-4},10^{-3},\ldots,10^4\}$ by pooled validation mean squared error. Feature means and scales were fitted separately within each training fold. All predictors were finite, so no imputation was required. Aliases and overlapping personnel across different artist credits were not resolved, which limits the strength of the artist-disjoint interpretation. The personal case studies have not yet been completed and were not used in pilot model selection.
 
 For held-out predictions, we report
 \begin{equation}
@@ -156,7 +181,7 @@ We also report out-of-fold $R^2$:
 provided the response has nonzero variation. Here each prediction is obtained from an outer model that did not train on that example, and $\bar y_r$ is the mean of the evaluated responses. This statistic can be negative and is not a classification accuracy. The training-mean baseline will still be evaluated separately in every outer fold, since it is the deployable constant predictor for that fold.
 
 \subsubsection{Case-study predictions}
-After evaluation, each primary model was refitted on the full provisional sample, with five-fold grouped validation selecting its penalty. These refits are saved for later case-study predictions; their training errors are not used to evaluate predictive performance. The case-study recordings will remain excluded from all training and tuning. For a case-study excerpt $\ast$, define $c_{jr}=\widehat\beta_{jr}z_{\ast j}$. Then
+After pilot evaluation, each primary model was refitted on the full provisional sample, with five-fold grouped validation selecting its penalty. These pilot refits are saved for exploratory case-study predictions; their training errors are not used to evaluate predictive performance. Case studies for the revised question will use models refitted on the broader sample after evaluation. The case-study recordings will remain excluded from all training and tuning. For a case-study excerpt $\ast$, define $c_{jr}=\widehat\beta_{jr}z_{\ast j}$. Then
 \begin{equation}
  \widehat y_{\ast r}-\widehat\beta_{0r}
  =\sum_{j=1}^{p}c_{jr}.
@@ -180,7 +205,7 @@ We used slopes of amplitude normalized by excerpt mean amplitude, centroid, and 
 \end{equation}
 These five descriptors were added to the seven original features in an exploratory ridge model. The extension was introduced after examining the primary results and is reported separately. It used the same outer groups and nested tuning procedure. No new emotion responses were created for the bins.
 
-A buildup, drop, or breakdown is a musical interpretation of a section. The descriptors above measure patterns that can motivate section review, but they do not assign verified section labels. For later annotated full-song examples, we define a section contrast for feature $j$ by
+A verse, chorus, bridge, buildup, drop, or breakdown is a musical interpretation of a section. The appropriate labels depend on the recording. The descriptors above measure patterns that can motivate section review, but they do not assign verified section labels. For later annotated full-song examples, we define a section contrast for feature $j$ by
 \begin{equation}
  d_j=x_{\mathrm{drop},j}-x_{\mathrm{preceding\ buildup},j}.
 \end{equation}

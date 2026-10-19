@@ -75,13 +75,13 @@
 \addbibresource{references.bib}
 
 
-\title{Acoustic Characteristics and Emotional Mood in Electronic Dance Music}
+\title{How Do Acoustic Features Relate to the Emotions We Hear in Music?}
 \author{Caden Che and Kevin Zuniga}
 \thanks{Exploratory analysis prepared for MATH 195, Stanford University.}
 \begin{document}
 \onehalfspacing
 \begin{abstract}
-We investigate which musical characteristics help explain the emotional mood of electronic dance music using 92 provisional dance-style candidates from MERGE Audio Complete. Seven interpretable acoustic features predict supplied valence and arousal scores through separate ridge regressions evaluated using nested artist-credit-group cross-validation. Arousal RMSE decreases from 0.0992 for a training-mean baseline to 0.0931, with out-of-fold $R^2=0.118$. Valence prediction does not improve over the baseline. Spectral brightness and spectral change provide the clearest contribution to arousal prediction. An exploratory temporal extension yields small, split-dependent changes in error. The results concern a provisional sample and static supplied labels; verified full-song section analysis and personal case studies remain future work.
+We investigate how measurable properties of recorded music relate to its emotional character, using valence and arousal as separate responses. Our shared interest in energetic songs that sound sad motivated an initial focus on electronic dance music. Following a review of the candidate recordings, we broadened the question to music across genres. This midterm report presents the revised framework alongside the completed pilot analysis of 92 provisional dance-style candidates from MERGE. Seven acoustic features supported a modest improvement in arousal prediction using ridge regression, while valence prediction did not improve over a training-mean baseline. These results concern the pilot sample; the broader sample has not yet been evaluated. Ordinary least squares and ridge regression provide our starting models, with source separation and an LSTM proposed as extensions. Two selected songs will later connect the fitted predictions to our listening observations.
 \end{abstract}
 \maketitle
 \input{01_introduction}
