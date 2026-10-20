@@ -1,217 +1,219 @@
 \subsection{Mathematical Model}
 \label{sec:model}
 
-We relate acoustic measurements to supplied valence and arousal scores. We fit a separate model for each response because a recording can have a negative emotional character and high activation at the same time. Ordinary least squares is our starting point, and ridge regression adds a penalty that can make the fitted coefficients less sensitive to related predictors.
-
-The completed pilot uses the earlier 92-recording selection. The framework also applies to the revised question across genres, but the broader sample still needs to be prepared and evaluated. A sequence-model extension is proposed below.
+We compare an initial seven-feature representation with an expanded representation containing 82 acoustic measurements. Ordinary least squares and ridge regression provide interpretable starting points. Nonlinear models and an LSTM examine additional relationships within the same grouped evaluation framework.
 
 \subsubsection{Predictors and responses}
-Let $n$ denote the number of eligible excerpts in the finalized sample, and let $\bm{x}_i\in\mathbb{R}^7$ contain the measurements listed in Table~\ref{tab:predictors}. These seven features were extracted in the preliminary analysis; final inclusion depends on audio availability, label checks, and review of repeated recordings. No mood tags, quadrant labels, or other emotion-derived metadata will be used as predictors. The released numerical labels we inspected lie on a $[0,1]$ scale. We will preserve that scale and document it alongside the annotation procedure.
+
+For recording $i$, let $v_i$ and $a_i$ denote its supplied valence and arousal scores. We fit separate static regression models for these responses. In the equations below, $y_i$ represents either response.
+
+Let $x_{ij}$ denote acoustic feature $j$ for recording $i$, where $j=1,\ldots,p$. The initial seven features are mean and standard deviation of RMS amplitude, mean spectral centroid, bass-band power fraction, positive spectral flux, onsets per second, and estimated tempo.
+
+The expanded representation adds 75 measurements, summarized in Table~\ref{tab:features}. Chroma describes the distribution of spectral energy among pitch classes \cite{librosachroma}. Mel-frequency cepstral coefficients (MFCCs) and spectral contrast provide additional summaries of spectral shape and timbre.
 
 \begin{table}[ht]
 \centering
-\caption{Initial acoustic predictors, computed from each excerpt.}
-\label{tab:predictors}
-\begin{tabular}{ll}
+\caption{Composition of the expanded acoustic representation.}
+\label{tab:features}
+\begin{tabular}{
+    >{\raggedright\arraybackslash}p{0.76\textwidth}
+    r
+}
 \toprule
-Measurement & Musical interpretation \\
+Measurements & Number \\
 \midrule
-Mean frame RMS amplitude & Typical signal amplitude \\
-Standard deviation of frame RMS & Variation in signal amplitude \\
-Mean spectral centroid (Hz) & Spectral brightness \\
-Power fraction in $20\leq f<250$ Hz & Bass-band content \\
-Mean positive spectral flux & Changes in spectral magnitude \\
-Detected onsets per second & Rate of detected sound attacks \\
-Estimated tempo (BPM) & Estimated beat rate \\
+Original amplitude, rhythm, and spectral features & 7 \\
+Means and standard deviations of 13 MFCCs & 26 \\
+Means and standard deviations of 12 chroma channels & 24 \\
+Means and standard deviations of seven spectral-contrast bands & 14 \\
+Means and standard deviations of flatness, bandwidth, rolloff, and zero-crossing rate & 8 \\
+Chroma entropy, chroma change, and triad-template contrast & 3 \\
+\midrule
+Total & 82 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-RMS amplitude describes signal amplitude and serves as an approximate loudness-related measurement. Estimated tempo is subject to beat-tracking errors. Bass-band content measures the proportion of spectrogram power in the stated frequency range. These quantities describe aspects of the audio; arousal remains a response label. Harmony and mode are possible later additions, but we have not yet validated features that would support claims about minor chords.
+These features describe acoustic properties. RMS amplitude is an approximate loudness-related quantity, and estimated tempo can contain half-time or double-time errors. Several measurements also describe overlapping information, which motivates the use of regularization.
 
-\subsubsection{Defining the audio measurements}
+One descriptive pitch feature compares the strongest major and minor triad-template matches. Let $C_0,\ldots,C_{11}$ be average chroma values. We define
+\begin{equation}
+H=
+\frac{
+\max_r(C_r+C_{r+4}+C_{r+7})
+-
+\max_r(C_r+C_{r+3}+C_{r+7})
+}{
+\sum_{k=0}^{11}C_k+10^{-12}
+},
+\label{eq:triad}
+\end{equation}
+where indices are taken modulo 12. This summarizes the overall pitch-class distribution. It should be interpreted as a descriptive template contrast rather than a verified key estimate or chord transcription.
 
-The preliminary extraction converts audio to mono at $22{,}050$ samples per second. It uses a short-time Fourier transform with a Hann window of length $N=2{,}048$ and a hop length of $512$ samples. Let $S_{kt}\geq0$ denote the resulting magnitude at frequency bin $k$ and frame $t$, with frequency $f_k$. Let $L$ be the number of frames and $T$ the excerpt duration in seconds.
+Because the predictors have different units, each feature is standardized:
+\begin{equation}
+z_{ij}=\frac{x_{ij}-\mu_j}{s_j},
+\label{eq:standardization}
+\end{equation}
+where $\mu_j$ and $s_j$ are calculated from the training partition. Validation and test recordings use these same training values. Features with no training variation are removed.
 
-For the windowed samples $u_{t\ell}$ in a frame, its RMS amplitude is
-\begin{equation}
- R_t=\sqrt{\frac{1}{N}\sum_{\ell=0}^{N-1}u_{t\ell}^2}.
-\end{equation}
-The extraction computes the equivalent quantity from the spectrogram. Its two summaries are
-\begin{equation}
- \overline R=\frac{1}{L}\sum_{t=1}^{L}R_t,
- \qquad
- s_R=\sqrt{\frac{1}{L}\sum_{t=1}^{L}(R_t-\overline R)^2}.
-\end{equation}
-Here $s_R$ is a population standard deviation across frames. Both measurements depend on the recording's amplitude scale and production, which matters when comparing mastered tracks.
-
-The spectral centroid for a non-silent frame is
-\begin{equation}
- C_t=\frac{\sum_k f_k S_{kt}}{\sum_k S_{kt}},
- \qquad \overline C=\frac{1}{L}\sum_{t=1}^{L}C_t.
-\end{equation}
-Silent frames are assigned centroid zero in the extraction. Larger values indicate that spectral magnitude is concentrated at higher frequencies. The bass-band fraction is
-\begin{equation}
- B=\frac{\sum_t\sum_{k:\,20\leq f_k<250}S_{kt}^2}
- {\sum_t\sum_k S_{kt}^2}.
-\end{equation}
-The implementation adds a small constant to the denominator to handle near-silence. Positive spectral flux is summarized by
-\begin{equation}
- F=\frac{1}{L-1}\sum_{t=2}^{L}\sum_k
- \max\{S_{kt}-S_{k,t-1},0\}.
-\end{equation}
-This particular flux measure uses unnormalized spectral magnitudes, so amplitude changes can affect it. We will inspect its correlation with the RMS features before interpreting its coefficient.
-
-If the onset detector identifies $D$ attacks, the onset-rate feature is $D/T$. The tempo estimate is the beat-rate estimate returned by the audio analysis algorithm, measured in BPM. Onset rate and tempo describe different aspects of rhythm: a recording can contain several detected attacks within one beat. We will inspect beat-tracking errors, including estimates at half or twice a plausible tempo. All case-study excerpts will use this same feature-extraction procedure.
-
-For training-set size $m$, define the standardized predictor
-\begin{equation}
- z_{ij}=\frac{x_{ij}-\mu_j}{s_j},
- \qquad j=1,\ldots,p,
-\end{equation}
-where $\mu_j=m^{-1}\sum_{i=1}^m x_{ij}$ and $s_j=\{m^{-1}\sum_{i=1}^m(x_{ij}-\mu_j)^2\}^{1/2}$ are the training mean and standard deviation. Constant predictors are removed, so $p\leq7$. The same training values are used to transform held-out songs. A coefficient $\beta_{jr}$ therefore represents the fitted change in response $r$ associated with a one-training-standard-deviation increase in predictor $j$, holding the other standardized predictors fixed.
+A one-unit increase in $z_{ij}$ corresponds to one training standard deviation in the original measurement. Standardization also prevents the original units from determining the strength of the ridge penalty.
 
 \subsubsection{Ordinary least squares}
 
-For either response, let $y_i$ denote the supplied score for recording $i$. Our initial model is
+Our linear model is
 \begin{equation}
 y_i=\beta_0+\sum_{j=1}^{p}\beta_jz_{ij}+\varepsilon_i.
+\label{eq:linear}
 \end{equation}
-The intercept describes the prediction at the training-average feature values. Each coefficient describes the change in prediction associated with a one-standard-deviation increase in a feature, with the other included features fixed. The residual captures variation that the model does not explain.
+The intercept is the prediction at the training-average feature values. Each coefficient describes the change in prediction associated with a one-standard-deviation increase in that feature, holding the other included features fixed. The residual represents variation not captured by the model.
 
-Ordinary least squares chooses coefficients to minimize
+For $m$ training recordings, ordinary least squares minimizes
 \begin{equation}
+\min_{\beta_0,\boldsymbol\beta}
 \frac{1}{m}\sum_{i=1}^{m}
 \left(y_i-\beta_0-\sum_{j=1}^{p}\beta_jz_{ij}\right)^2.
+\label{eq:ols}
 \end{equation}
-This gives larger errors more weight and prevents positive and negative errors from canceling. With centered response vector $\bm y_c$ and standardized feature matrix $Z$, the coefficient equations are
-\[
-Z^{\mathsf T}Z\widehat{\bm\beta}=Z^{\mathsf T}\bm y_c.
-\]
-If the predictors are linearly independent, their solution is
-\[
-\widehat{\bm\beta}=(Z^{\mathsf T}Z)^{-1}Z^{\mathsf T}\bm y_c.
-\]
-The implementation uses a numerical least-squares solver rather than explicitly computing this inverse. Correlated measurements can make the coefficients unstable, which motivates the ridge model.
+Squared errors prevent positive and negative residuals from canceling and give larger errors more weight.
 
-\subsubsection{Ridge estimation}
+Let $Z$ be the standardized feature matrix and let
+\[
+\mathbf y_c=(y_1-\bar y,\ldots,y_m-\bar y)^\top
+\]
+be the centered response vector. Centering the predictors gives the fitted intercept $\widehat\beta_0=\bar y$. Differentiating the objective gives the normal equations
+\begin{equation}
+Z^\top Z\widehat{\boldsymbol\beta}=Z^\top\mathbf y_c.
+\end{equation}
+If the columns of $Z$ are linearly independent, then
+\begin{equation}
+\widehat{\boldsymbol\beta}_{\mathrm{OLS}}
+=(Z^\top Z)^{-1}Z^\top\mathbf y_c.
+\end{equation}
+The implementation uses a numerical least-squares solver rather than explicitly calculating this inverse.
 
-Ridge regression adds a squared-coefficient penalty to least squares; van Wieringen reviews this framework and its properties \cite{vanwieringen2026ridge}. Below we derive the estimator using our chosen normalization of the loss.
-For response index $r\in\{v,a\}$, define $y_{iv}=v_i$ and $y_{ia}=a_i$. The model is
+\subsubsection{Ridge regression}
+
+Correlated predictors can make ordinary least-squares coefficients sensitive to the training sample. Ridge regression addresses this by adding a squared-coefficient penalty \cite{vanwieringen2026ridge}:
 \begin{equation}
- y_{ir}=\beta_{0r}+\bm{z}_i^{\mathsf T}\bm{\beta}_r+\varepsilon_{ir}.
- \label{eq:linear}
+\min_{\beta_0,\boldsymbol\beta}
+\left\{
+\frac{1}{m}\sum_{i=1}^{m}
+\left(y_i-\beta_0-\sum_{j=1}^{p}\beta_jz_{ij}\right)^2
++
+\lambda\sum_{j=1}^{p}\beta_j^2
+\right\}.
+\label{eq:ridge}
 \end{equation}
-We estimated the coefficients by minimizing
+The intercept is unpenalized. When $\lambda=0$, the objective reduces to ordinary least squares. Increasing $\lambda$ shrinks the feature coefficients toward zero, which can reduce sensitivity to the training sample.
+
+For centered responses and standardized predictors,
 \begin{equation}
- (\widehat\beta_{0r},\widehat{\bm\beta}_r)
- =\operatorname*{arg\,min}_{b,\bm\beta}
- \left\{\frac{1}{m}\sum_{i=1}^{m}
- (y_{ir}-b-\bm z_i^{\mathsf T}\bm\beta)^2
- +\lambda_r\lVert\bm\beta\rVert_2^2\right\},\qquad\lambda_r>0.
- \label{eq:ridge}
+\widehat{\boldsymbol\beta}_{\mathrm{ridge}}
+=
+(Z^\top Z+m\lambda I)^{-1}Z^\top\mathbf y_c.
+\label{eq:ridge_solution}
 \end{equation}
-The intercept is unpenalized. The penalty limits coefficient size, which is useful because measurements such as amplitude and onset activity may be correlated. Equation~\eqref{eq:linear} is a linear approximation to the relationship between the chosen measurements and the supplied labels. The residual term includes both variation not captured by these predictors and error in the measurements or labels.
 
 \begin{prop}
-For any $\lambda_r>0$, problem~\eqref{eq:ridge} has a unique solution, even if the standardized predictors are linearly dependent.
+\label{prop:ridge_unique}
+For $\lambda>0$, ridge regression has a unique solution even when the predictors are linearly dependent.
 \end{prop}
+
 \begin{proof}
-Let $Z$ be the $m\times p$ training matrix with centered columns and let $\bm y_{c,r}=\bm y_r-\bar y_r\bm 1$. The derivative with respect to the intercept is $-2m^{-1}\sum_i(y_{ir}-b-\bm z_i^{\mathsf T}\bm\beta)$. Since $\sum_i\bm z_i=\bm0$, setting it to zero gives $\widehat\beta_{0r}=\bar y_r$. The normal equations for the remaining coefficients are
+For any nonzero vector $\mathbf u$,
 \[
- (Z^{\mathsf T}Z+m\lambda_r I_p)\widehat{\bm\beta}_r
- =Z^{\mathsf T}\bm y_{c,r}.
+\mathbf u^\top(Z^\top Z+m\lambda I)\mathbf u
+=
+\|Z\mathbf u\|_2^2+m\lambda\|\mathbf u\|_2^2>0.
 \]
-For every nonzero $\bm u\in\mathbb R^p$,
-\[
- \bm u^{\mathsf T}(Z^{\mathsf T}Z+m\lambda_r I_p)\bm u
- =\lVert Z\bm u\rVert_2^2+m\lambda_r\lVert\bm u\rVert_2^2>0.
-\]
-The matrix is positive definite and invertible. Thus
-\[
- \widehat{\bm\beta}_r
- =(Z^{\mathsf T}Z+m\lambda_r I_p)^{-1}Z^{\mathsf T}\bm y_{c,r},
-\]
-and both the coefficient vector and intercept are unique.
+Thus $Z^\top Z+m\lambda I$ is positive definite and invertible. Equation~\eqref{eq:ridge_solution} gives a unique coefficient vector. Since the training predictors are centered, the unpenalized intercept equals the training-response mean.
 \end{proof}
 
-The penalty shrinks feature coefficients toward zero. A larger penalty brings predictions closer to the training-mean intercept. This can reduce sensitivity to the training sample, although too much shrinkage can remove useful information. We select the penalty through validation. With the average-error convention in Equation~\eqref{eq:ridge}, software using a sum-of-errors objective requires $\alpha=m\lambda_r$.
+Proposition~\ref{prop:ridge_unique} explains why ridge remains well defined when measurements contain redundant information. The penalty still needs to be selected through validation because excessive shrinkage can remove useful predictive information.
 
-\subsubsection{A proposed LSTM extension}
+The seven-feature ridge model uses penalties from $10^{-4}$ through $10^4$. The expanded model uses penalties from $10^{-4}$ through $10^2$. Both grids are logarithmically spaced. For software using a sum of squared errors instead of the average-error objective, the equivalent penalty is $\alpha=m\lambda$.
 
-Excerpt-level summaries do not preserve the order of acoustic changes. A recording that gradually becomes louder can have a similar mean amplitude to one that starts loudly and becomes quiet. To examine whether that order improves prediction, we propose a long short-term memory network, or LSTM \cite{hochreiter1997lstm}.
+\subsubsection{Nonlinear comparisons}
 
-Each recording would be divided into consecutive windows, with a feature vector $\bm z_{it}$ for window $t$. The model updates a hidden representation and memory state:
-\[
-(\bm h_{it},\bm c_{it})
+A random forest averages predictions from multiple regression trees \cite{sklearnforest}. This permits nonlinear relationships and interactions among predictors. We use 100 trees and select the minimum leaf size and feature fraction through inner validation.
+
+We also evaluate an approximation to radial basis function (RBF) kernel ridge regression. This maps standardized measurements into a nonlinear representation and fits ridge regression to that representation. A 64-landmark Nystr\"om approximation limits the computational cost \cite{sklearnnystroem}. The mapping is fitted within each training partition, and its kernel width and penalty are selected through inner validation.
+
+These models test whether more flexible relationships improve prediction. Their outputs require a different interpretation from the exact coefficient decomposition available for a linear model.
+
+\subsubsection{Long short-term memory model}
+
+The LSTM processes ten consecutive windows from each recording. Each window contains RMS amplitude, spectral centroid, bass-band content, and onset rate.
+
+Its internal states update according to
+\begin{equation}
+(\mathbf h_{it},\mathbf c_{it})
 =
 \operatorname{LSTM}_{\theta}
-(\bm z_{it},\bm h_{i,t-1},\bm c_{i,t-1}).
-\]
-These states allow earlier measurements to influence the final representation. Two output layers would then predict the overall responses:
-\[
-\widehat v_i=b_v+\bm w_v^{\mathsf T}\bm h_{iT},
-\qquad
-\widehat a_i=b_a+\bm w_a^{\mathsf T}\bm h_{iT}.
-\]
-Training would minimize the average squared error across both responses. The model has not yet been trained. All windows from one recording will remain in the same evaluation group, and preprocessing will use training data only. With static labels, this tests prediction of overall emotion scores; it does not validate emotion predictions for individual windows.
-
-\subsubsection{Evaluation and interpretation}
-The completed pilot used five outer folds and three inner folds, grouping observations by complete artist-credit strings after normalizing whitespace and letter case. The pilot contains 63 such groups. We will rebuild the groups for the broader sample and use the same evaluation design where sample size permits. No artist-credit group appears in both training and validation or test data within a split. The primary outer split uses random seed 195. Inner grouped validation selected $\lambda_r$ from $\{10^{-4},10^{-3},\ldots,10^4\}$ by pooled validation mean squared error. Feature means and scales were fitted separately within each training fold. All predictors were finite, so no imputation was required. Aliases and overlapping personnel across different artist credits were not resolved, which limits the strength of the artist-disjoint interpretation. The personal case studies have not yet been completed and were not used in pilot model selection.
-
-For held-out predictions, we report
-\begin{equation}
- \mathrm{RMSE}_r=
- \sqrt{\frac{1}{n_{\mathrm{test}}}\sum_{i\in\mathrm{test}}
- (y_{ir}-\widehat y_{ir})^2}.
+(\mathbf z_{it},\mathbf h_{i,t-1},\mathbf c_{i,t-1}),
 \end{equation}
-We compared this error with a baseline that predicts the outer training mean. Ridge predictions can fall outside $[0,1]$; we report their frequency and evaluate the raw predictions consistently. Coefficients are summarized across outer folds to show whether their signs and magnitudes are stable. To assess predictive usefulness, we also refitted and retuned models with each feature family omitted, using the same outer folds. Correlated predictors can substitute for one another, so a small error change does not establish that a musical characteristic is irrelevant.
+where $\mathbf h_{it}$ is a hidden representation and $\mathbf c_{it}$ is a memory state \cite{hochreiter1997lstm}. These states allow measurements from earlier windows to influence the final representation.
 
-We grouped the predictors into amplitude ($\overline R,s_R$), rhythm (onset rate and tempo), spectral change and brightness ($F,\overline C$), and bass-band content ($B$). For family $g$, define the held-out error change
+Two output layers predict the overall responses:
+\begin{align}
+\widehat v_i &= b_v+\mathbf w_v^\top\mathbf h_{iT},\\
+\widehat a_i &= b_a+\mathbf w_a^\top\mathbf h_{iT}.
+\end{align}
+Training minimizes average squared error across both responses:
 \begin{equation}
- \Delta_{g,r}=\mathrm{RMSE}_{r,-g}-\mathrm{RMSE}_{r,\mathrm{full}}.
+\mathcal L=
+\frac{1}{2m}\sum_{i=1}^{m}
+\left[
+(v_i-\widehat v_i)^2+
+(a_i-\widehat a_i)^2
+\right].
 \end{equation}
-A positive value indicates that omitting the family worsens prediction under the stated evaluation procedure. We report the changes across folds as well as the aggregate value. A negative value is possible if the omitted features add noise or do not generalize. These comparisons will complement coefficient summaries rather than provide a ranking of causal effects.
 
-We also report out-of-fold $R^2$:
-\begin{equation}
- R^2_r=1-\frac{\sum_i(y_{ir}-\widehat y^{\mathrm{OOF}}_{ir})^2}
- {\sum_i(y_{ir}-\bar y_r)^2},
-\end{equation}
-provided the response has nonzero variation. Here each prediction is obtained from an outer model that did not train on that example, and $\bar y_r$ is the mean of the evaluated responses. This statistic can be negative and is not a classification accuracy. The training-mean baseline will still be evaluated separately in every outer fold, since it is the deployable constant predictor for that fold.
+The evaluated network has eight hidden units and trains for 120 full-batch Adam epochs, with gradient clipping and weight regularization. These settings are fixed rather than selected from outer test scores.
 
-\subsubsection{Case-study predictions}
-After pilot evaluation, each primary model was refitted on the full provisional sample, with five-fold grouped validation selecting its penalty. These pilot refits are saved for exploratory case-study predictions; their training errors are not used to evaluate predictive performance. Case studies for the revised question will use models refitted on the broader sample after evaluation. The case-study recordings will remain excluded from all training and tuning. For a case-study excerpt $\ast$, define $c_{jr}=\widehat\beta_{jr}z_{\ast j}$. Then
-\begin{equation}
- \widehat y_{\ast r}-\widehat\beta_{0r}
- =\sum_{j=1}^{p}c_{jr}.
- \label{eq:contributions}
-\end{equation}
-This identity gives an exact decomposition of the fitted linear prediction relative to its training-mean intercept. A negative valence contribution indicates that a measured feature lowers the model's prediction for that excerpt. The contribution describes an association within the fitted model. Establishing a causal effect of changing the musical characteristic would require an experimental design beyond the scope of this study. Each case study will use a prespecified excerpt of approximately 30 seconds, identified by its timestamp before model predictions are inspected. We will check whether its standardized features lie within the observed training ranges and compare the predicted valence and arousal with an independently written listening description. We will report the intercept, individual feature contributions, and residual difference if a comparable emotion annotation is available. An informal description alone will not be treated as a numerical ground-truth score. Prediction errors will remain part of the case-study analysis and will be discussed in relation to the coverage of the feature set and the training sample.
+The LSTM uses four window-level measurements, while the expanded static models use 82 excerpt-level summaries. Their comparison therefore changes both the model and its representation. The available targets are static labels, so evaluation concerns overall emotion prediction.
 
-\subsubsection{Temporal descriptors and a section-based extension}
+\subsubsection{Evaluation and feature interpretation}
 
-To investigate acoustic variation within the excerpts, we divided each recording into ten equal-duration bins. Let $r_{i\ell}$, $c_{i\ell}$, $b_{i\ell}$, and $o_{i\ell}$ denote mean RMS amplitude, mean centroid, bass-band power fraction, and onset rate in bin $\ell$, respectively. For any bin-level measurement $h_{i\ell}$, define its time slope over normalized bin centers $t_\ell=(\ell-1/2)/10$ as
-\begin{equation}
- s_i(h)=\frac{\sum_{\ell=1}^{10}(t_\ell-\bar t)(h_{i\ell}-\bar h_i)}
- {\sum_{\ell=1}^{10}(t_\ell-\bar t)^2}.
-\end{equation}
-We used slopes of amplitude normalized by excerpt mean amplitude, centroid, and onset rate. We also measured
-\begin{equation}
- J_i=\max_{\ell=1,\ldots,9}
- 20\log_{10}\!\left(\frac{r_{i,\ell+1}+10^{-8}}{r_{i\ell}+10^{-8}}\right),
- \qquad
- K_i=\max_{\ell=1,\ldots,9}(b_{i,\ell+1}-b_{i\ell}).
-\end{equation}
-These five descriptors were added to the seven original features in an exploratory ridge model. The extension was introduced after examining the primary results and is reported separately. It used the same outer groups and nested tuning procedure. No new emotion responses were created for the bins.
+We use five outer folds for evaluation and three inner folds for parameter selection. Recordings are grouped by normalized complete artist-credit strings. All measurements and windows from a recording remain in the same group.
 
-A verse, chorus, bridge, buildup, drop, or breakdown is a musical interpretation of a section. The appropriate labels depend on the recording. The descriptors above measure patterns that can motivate section review, but they do not assign verified section labels. For later annotated full-song examples, we define a section contrast for feature $j$ by
+The baseline predicts the outer training mean. We report pooled out-of-fold prediction errors:
 \begin{equation}
- d_j=x_{\mathrm{drop},j}-x_{\mathrm{preceding\ buildup},j}.
+\operatorname{RMSE}
+=
+\sqrt{
+\frac{1}{n}\sum_{i=1}^{n}
+(y_i-\widehat y_i^{\mathrm{OOF}})^2
+},
+\label{eq:rmse}
 \end{equation}
-Using the same fitted primary model and scaling, the difference between the two section-input predictions is exactly
+and
 \begin{equation}
- \widehat y_{\mathrm{drop},r}-\widehat y_{\mathrm{buildup},r}
- =\sum_j\widehat\beta_{jr}\frac{d_j}{s_j}.
+R^2=
+1-
+\frac{\sum_i(y_i-\widehat y_i^{\mathrm{OOF}})^2}
+{\sum_i(y_i-\bar y)^2}.
+\label{eq:r2}
 \end{equation}
-This expresses how changes in measured sound affect the model's output. The model was trained on static excerpt labels, so the difference cannot be interpreted as a validated change in listener emotion without section-level annotations. Shorter sections also introduce a distribution shift relative to the approximately 30-second training excerpts.
+Each out-of-fold prediction comes from a model that excluded the corresponding artist-credit group. The mean $\bar y$ in Equation~\eqref{eq:r2} is calculated over the evaluated responses.
+
+For a linear model, the prediction can be decomposed as
+\begin{equation}
+\widehat y_i-\widehat\beta_0
+=
+\sum_{j=1}^{p}\widehat\beta_jz_{ij}.
+\label{eq:contributions}
+\end{equation}
+Each term describes a feature's contribution relative to the intercept.
+
+We also remove feature families, refit and retune ridge, and repeat evaluation:
+\begin{equation}
+\Delta\operatorname{RMSE}
+=
+\operatorname{RMSE}_{\mathrm{reduced}}
+-
+\operatorname{RMSE}_{\mathrm{full}}.
+\label{eq:ablation}
+\end{equation}
+Positive values indicate worse prediction after removal. These comparisons describe predictive usefulness conditional on the retained measurements.

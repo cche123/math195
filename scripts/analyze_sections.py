@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 import librosa
 from extract_features import extract
-VALID={'intro','buildup','drop','breakdown','core','outro'}
+VALID={'intro','buildup','drop','breakdown','core','outro','verse','chorus','prechorus','bridge','interlude'}
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
@@ -31,3 +31,4 @@ def main():
     print('Exported measured section features. Song-level mood scores are not section-level emotion annotations.')
 
 if __name__=='__main__':main()
+

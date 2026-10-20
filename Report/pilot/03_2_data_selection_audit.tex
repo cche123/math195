@@ -1,0 +1,49 @@
+\subsection{Data Collection and Analysis}
+\label{sec:selection}
+
+Our preliminary audit uses the MERGE Audio Complete release from Zenodo record 13939205, version 1.1.0 \cite{mergedata}. We count excerpt records using the unique \texttt{Song} identifier in \texttt{merge\_audio\_complete\_metadata.csv}. Table~\ref{tab:sampleaudit} summarizes the selection rules we have reproduced. Matching uses complete tokens in the comma-separated metadata fields.
+
+\begin{table}[ht]
+\centering
+\caption{Reproduced metadata counts. Neither filtered row is a manually verified EDM sample.}
+\label{tab:sampleaudit}
+\begin{tabular}{lr}
+\toprule
+Selection rule & Excerpts \\
+\midrule
+All complete audio metadata records & 3,554 \\
+Electronic appears among genre tags & 543 \\
+Electronic plus an allowed dance-style tag & 92 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The 543 records include songs with multiple genre tags. They represent a broad electronic selection, and we will not report them as 543 EDM songs. An earlier exploratory rule additionally required at least one dance-style tag in the genre or style fields, using an explicit allowlist recorded in our script. This produces 92 provisional candidates. The rule is useful for reproducing the earlier analysis, but its boundary includes experimental and crossover styles and needs review before determining the final study population. 
+
+The provisional 92 candidates have quadrant counts of 34 in Q1, 35 in Q2, 18 in Q3, and 5 in Q4. This imbalance limits comparisons involving calm, positive examples. Seven acoustic features have been extracted for these candidates; the models reported below were fitted to this provisional feature table. Before fitting, we will record the inclusion criteria, review borderline genre assignments, and maintain a table of decisions by song identifier. Artist/title duplicates and repeated recordings will be checked so related examples can be grouped during evaluation. The final sample size will be reported after these steps.
+
+The supplied valence and arousal values were joined by \texttt{Song} with a one-to-one check. Genre and style fields will be used for selection, while mood tags and emotion-derived metadata will be excluded from the predictors. Our analysis concerns associations with the dataset's supplied static mood labels. The two personal case studies will be treated as external illustrations, with no claim that our listening impressions constitute independent population-level validation.
+
+\subsubsection{Reproducing the selection}
+
+We implement the audit in \texttt{scripts/audit\_merge.py}, available in our project repository. For record $i$, let $G_i$ be the set of comma-separated genre tokens, let $S_i$ be the set of style tokens, and let $\mathcal A$ be the explicit allowlist of dance-related tags. Define
+\begin{equation}
+ e_i=\mathbf 1\{\text{Electronic}\in G_i\},\qquad
+ d_i=e_i\,\mathbf 1\{(G_i\cup S_i)\cap\mathcal A\ne\varnothing\}.
+\end{equation}
+Then the broad electronic count is $\sum_i e_i=543$, and the provisional candidate count is $\sum_i d_i=92$. Exact token matching prevents strings such as Electronic Rock from being mistaken for the Electronic token. It also retains multi-genre tracks that include Electronic. Multiple tags do not produce multiple records.
+
+The script verifies that each song identifier is present and unique, then exports the selected records and a JSON summary of the counts. With the official ZIP as input, it checks the archive's MD5 checksum before reading the metadata. With a CSV as input, it records a SHA-256 fingerprint of those bytes without claiming to verify the original ZIP. The reproduced audit uses the recovered metadata CSV from our preliminary extraction. Across the complete metadata, six rows repeat an artist/title pair; these are distinct identifiers that require review before modeling.
+
+The provisional allowlist contains house, techno, trance, electro, jungle/drum-and-bass, garage, and several related styles. Its complete token list is recorded in the script and audit output. We will review that list and the resulting tracks rather than use the count itself to decide what belongs in the study. A final selection log should record each song identifier, the inclusion decision, and the reason for any exclusion.
+
+The audit and modeling code are available at \url{https://github.com/cche123/math195}. Its boundary checks cover exact versus substring matching, multi-genre inclusion, style-only Electronic tags, broad dance tags outside the allowlist, and repeated identifiers. The reproduced counts describe this release and these rules. They should not be compared with a different reported count until the release, modality subset, and genre criteria have been matched.
+
+\subsubsection{Scope of the fitted sample}
+
+The results in this report are an exploratory analysis of the 92 candidates selected by the documented rule. Their complete artist-credit strings form 63 groups, and there are no repeated artist/title pairs within these 92 rows. The selection contains dance-pop and experimental or crossover recordings, so it is not a manually verified population of contemporary EDM. The counts describe coverage of the selected data, rather than the prevalence of moods in EDM as a whole.
+
+The continuous supplied labels have no missing values in this sample. Mean valence is approximately $0.501$, and mean arousal is approximately $0.545$. The complete release's numerical labels were checked against its quadrant labels at a threshold of $0.5$, with agreement for all 3,554 rows. We retained the observed release scale. Since these targets originate from the dataset's annotation protocol, predicting them is distinct from collecting new listener ratings for our excerpts.
+
+We did not combine MERGE with another dataset. The full audio recordings used for feature recomputation remained local; the reproducible repository contains feature tables, predictions, code, and figures. During temporal extraction, all seven recomputed primary measurements matched the stored values exactly, providing a direct check of the original feature table under the current implementation.
+

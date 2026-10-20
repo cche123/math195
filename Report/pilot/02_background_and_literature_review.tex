@@ -1,0 +1,55 @@
+\section{Background and Literature Review}
+\label{sec:literature}
+
+Music emotion recognition examines how information in a recording relates to its emotional character. Our interest began with songs that sound energetic and sad at the same time. We ask how acoustic features relate to the emotions we hear in music, using valence and arousal as numerical responses. The following studies inform our choice of labels, data, and methods, as well as the limits of what our predictions can explain.
+
+\subsection{Defining the emotional response}
+
+Kang and Herremans review music emotion datasets, prediction methods, and evaluation challenges \cite[Secs.~II and V]{kang2025survey}. They distinguish perceived emotion, which describes what a listener hears in a song, from induced emotion, which describes how listening makes that person feel. A listener may enjoy music perceived as sad, illustrating why perceived and induced emotion require different prediction targets. The survey also separates static annotations, which summarize a recording, from dynamic annotations that follow changes over time.
+
+Valence and arousal provide a useful representation for our question. Valence describes emotional positivity, while arousal describes activation, ranging from calm to highly activated. These dimensions let us examine negative mood without assuming that it always appears in slow or quiet music. Tempo, amplitude, and onset activity will be acoustic predictors; the supplied valence and arousal scores will be the responses.
+
+In this study, ``explaining mood'' refers to identifying associations between acoustic measurements and the supplied emotion scores. Low valence can correspond to several negative emotions, including sadness and anger. We therefore interpret the regression response as emotional negativity and use written listening descriptions to discuss sadness more specifically in the case studies.
+
+\subsection{MERGE as a starting point}
+
+Louro et al. introduce MERGE for static emotion prediction using audio, lyrics, and both modalities together \cite[Secs.~III--V]{louro2025merge}. The complete audio release contains 3,554 excerpts, while the bimodal dataset contains 2,216 examples. The authors evaluate four-quadrant classification and numerical valence--arousal regression. Their creation protocol maps AllMusic emotion tags into the valence--arousal plane using affective word ratings and includes manual validation. It also excludes examples close to the center of that plane to reduce ambiguity.
+
+MERGE provides an established framework for feature-based mood prediction. Our revised study applies that framework to music across genres and emphasizes a small set of interpretable acoustic measurements. We will examine which features are associated with valence, which are associated with arousal, and how well those relationships predict held-out examples. The contribution of our study is the interpretation of these relationships within the selected MERGE sample and their application to selected case-study recordings.
+
+The annotation procedure determines the meaning of the response variables. Our models will predict scores derived through MERGE's construction process; the study does not collect a new set of listener ratings. Genre metadata will help describe coverage across the revised sample. The earlier Electronic and dance-style filters selected a broader set of recordings than our intended EDM focus. Section~\ref{sec:selection} preserves the reproduced counts and rules from that pilot.
+
+\subsection{Musical changes and emotional intensity}
+
+Solberg examines production techniques in buildup and drop sections through descriptive and interpretive musical analysis \cite{solberg2014bass}. The discussion connects techniques such as drum rolls, frequency changes, contrasting breakdowns, and the removal and return of bass to expectation, tension, and emotional intensity. This work gives a musical basis for examining rhythmic activity, low-frequency content, and changes in amplitude and timbre.
+
+For our analysis, this work motivates a distinction between emotional intensity and emotional positivity. A production change that builds anticipation could be relevant to arousal without having the same relationship with valence. We will investigate that possibility by fitting separate models for the two responses. The temporal resolution of the data also limits the analysis. Features averaged over a short excerpt summarize the audio in that interval and do not describe a complete buildup-to-drop sequence. Our initial models will therefore relate excerpt-level measurements to supplied static labels. Solberg's analysis concerns EDM specifically; we use it to motivate comparisons of acoustic change without assuming that every genre follows a buildup-to-drop structure. Later case studies may compare verses, choruses, bridges, or other sections appropriate to the chosen recordings.
+
+\subsection{What separate musical sources can tell us}
+
+In EmoMucs, de Berardinis, Cangelosi, and Coutinho use source separation to estimate vocals, bass, drums, and other accompaniment, then compare source-specific prediction models and fusion strategies \cite[Secs.~3--4]{deberardinis2020emomucs}. Their experiments use PMEmo's static induced-emotion annotations. In one configuration, valence $R^2$ improves from $0.4143$ for the full-mix baseline to $0.4814$ when source predictions are combined. Arousal performance is comparable to the baseline. Individual source models perform less well than the full mix, and the best source varies across tracks.
+
+These findings suggest that mood-related information can be distributed across musical components and that source usefulness depends on the recording. The use of induced-emotion annotations also distinguishes EmoMucs from MERGE's perceived-mood framework. Its reported scores provide methodological context, rather than a directly comparable performance benchmark for our sample.
+
+Our initial models use measurements defined on the complete audio mix. For example, low-frequency power can contain contributions from bass instruments, kick drums, and other sounds. We describe this quantity as bass-band content. A comparison of separated sources would constitute a subsequent experiment requiring assessment of separation quality.
+
+\subsection{Source separation and learned representations}
+
+Hybrid Transformer Demucs estimates musical sources using waveform and spectrogram information, with a transformer connecting the representations \cite{rouard2023demucs}. Its task is source reconstruction, and its separation scores measure reconstruction quality. This method could support a subsequent comparison of acoustic features across estimated stems. Those estimates may contain leakage or distortion, particularly where kick drums and synthesizer bass overlap. Representative outputs would require listening-based quality checks before an estimated stem could be interpreted as an instrument-specific measurement.
+
+MERT offers a complementary approach based on learned audio representations. Li et al. learn numerical music representations through self-supervised training with acoustic and pitch-related targets, then evaluate the representations on downstream music tasks \cite{li2024mert}. A frozen representation could be paired with a small prediction model when labeled data are limited. Its coordinates, however, do not have the direct meanings of quantities such as tempo or spectral centroid. Explicit acoustic features provide a more direct connection between a fitted prediction and a named musical characteristic, which is central to our research question. Demucs and MERT are therefore relevant methodological options rather than parts of the completed preliminary analysis.
+
+\subsection{Other data and the resulting study design}
+
+DEAM provides 1,802 excerpts and full songs with valence and arousal annotations both over time and at the recording level \cite{deamdataset}. Its time-varying annotations make it relevant to a later study of emotional changes within a recording. Before combining it with MERGE, we would need to check genre coverage, identify repeated recordings, align label scales, and examine differences in annotation procedures. Matching numerical ranges alone would not establish that the labels measure the same target. We have not pooled these datasets in the present audit.
+
+Taken together, these studies support a feature-based regression design with separate valence and arousal responses. We will use grouped evaluation to test whether the learned relationships extend to held-out recordings and compare performance with a training-mean baseline. The fitted models will then be applied to excerpts from two songs selected as case studies. For each excerpt, we will examine the features contributing to its predicted valence and arousal and compare the prediction with a written listening description. These examples will illustrate both the interpretability of the fitted relationships and information that may be absent from the initial feature set, including harmony, lyrical meaning, and structural context.
+
+\subsection{Sequence models and the next stage}
+
+Hochreiter and Schmidhuber introduce long short-term memory networks as a way to learn from sequences \cite{hochreiter1997lstm}. For our project, consecutive windows of acoustic features could preserve information that is lost when an entire excerpt is reduced to averages. We could then compare predictions from this sequence with predictions from the same features summarized over the excerpt.
+
+An LSTM would still be trained against the available overall labels. Its predictions would not establish a separate emotional response for every window. We have not trained this extension, and we will evaluate it against the simpler regression models before deciding whether its added complexity is useful.
+
+The completed feature extraction uses librosa on the full audio mix. Demucs, MERT, and an LSTM remain proposed extensions. Essentia is another possible extraction tool, but it was not used to produce the reported pilot features.
+

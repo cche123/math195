@@ -1,0 +1,20 @@
+\section{Introduction}
+\label{sec:introduction}
+
+We both enjoy music, and some of our favorite songs combine an active beat with a mood we perceive as sad. These examples made us interested in how the emotional character of a recording relates to measurable properties of its sound. Our research question is:
+\begin{quote}
+\textbf{How do acoustic features relate to the emotions we hear in music?}
+\end{quote}
+
+We study this question through valence and arousal. Valence describes emotional positivity, while arousal describes activation. Considering them separately allows us to investigate energetic recordings with a negative emotional character. Measurements such as tempo and amplitude will be predictors; the supplied emotion labels will be the responses.
+
+Our original project focused on electronic dance music (EDM). The metadata filters selected a broader range of electronic and dance-related recordings than we intended. During our subsequent review, we identified about seven recordings that matched our intended focus. This was our assessment of the reviewed candidates, rather than a count of every electronic recording in MERGE. We therefore broadened the question to music across genres.
+
+The completed pilot uses 92 provisional candidates from the earlier selection. Its seven acoustic features describe amplitude, rhythm, brightness, spectral change, and bass-band content. Under grouped evaluation, ridge regression improved arousal prediction modestly but did not improve valence prediction over a training-mean baseline. Those findings concern the pilot sample. Preparing and evaluating the revised sample remains the next stage.
+
+We begin with ordinary least squares and ridge regression because their predictions can be connected to named acoustic measurements. A possible LSTM extension will examine whether preserving the order of changes within an excerpt improves prediction. Source separation may also allow us to compare features from estimated vocals, bass, drums, and accompaniment.
+
+Finally, we will select two songs that we perceive as sad and compare written listening descriptions with their predicted valence and arousal. The feature contributions will help explain the model's behavior and reveal where it misses musical information that matters to us as listeners.
+
+Section~\ref{sec:literature} reviews the studies informing our approach. Section~\ref{sec:model} develops the models. The subsequent data, implementation, results, and conclusion sections retain the earlier pilot analysis while the broader study is prepared.
+

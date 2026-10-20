@@ -1,0 +1,37 @@
+\subsubsection{Case studies: contrasting sadness and happiness}
+\label{sec:case_studies}
+
+We have selected two recordings to connect the statistical findings to individual songs. Caden selected ``Apocalypse'' by Cigarettes After Sex as an example of perceived sadness, while Kevin selected ``Happy'' by Pharrell Williams as an example of perceived happiness. These descriptions reflect our listening impressions before examining the model predictions. We will investigate whether the acoustic relationships learned from MERGE help explain the contrast we hear between these recordings.
+
+\paragraph{Excerpt selection and prediction.}
+
+For each song, we will select an approximately 30-second excerpt and record its start time, end time, recording version, and a brief listening description before inspecting predictions. We will check whether either recording appears in the training sample. Any matching recording will be excluded before refitting the models used for that case study. Artist-credit overlap will also be recorded when interpreting how independently the examples test the models.
+
+We will extract the same acoustic features used in the MERGE analysis and apply the fitted models using the training-based standardization. Song titles, written lyrics, and our listening descriptions will not be supplied as predictors, although vocal sounds will remain part of the audio.
+
+The random forest will provide predictions from the strongest model in our cross-validation comparison. Expanded ridge regression will provide a separate prediction that can be examined through individual feature contributions. We expect ``Happy'' to receive higher predicted valence than ``Apocalypse.'' Arousal will be examined separately because emotional positivity and activation are distinct dimensions.
+
+\paragraph{Connecting predictions to acoustic features.}
+
+For each excerpt, we will report predicted valence and arousal and identify the largest positive and negative contributions to the ridge prediction. Each contribution is the product of a standardized feature value and its fitted coefficient. A positive contribution raises the prediction relative to the intercept, while a negative contribution lowers it.
+
+This decomposition connects numerical predictions to measurements of amplitude, rhythm, timbre, and pitch-class content. We will compare these measurements with our listening descriptions and identify features outside the ranges observed in training. The contributions explain the ridge prediction rather than the random-forest output. They describe fitted associations and do not establish that a particular feature causes sadness or happiness.
+
+\paragraph{Comparing sections within each recording.}
+
+Where the structure is clear, we will compare sections such as a verse and chorus. Section names will follow the recordings themselves; terms such as breakdown and drop will be used only where appropriate. For two sections, the difference between their ridge predictions is
+\begin{equation}
+\widehat{y}_A-\widehat{y}_B
+=\sum_{j=1}^{p}\widehat{\beta}_j
+\frac{x_{Aj}-x_{Bj}}{s_j}.
+\label{eq:case_section_difference}
+\end{equation}
+Here, $x_{Aj}$ and $x_{Bj}$ are measurements of feature $j$ in sections $A$ and $B$, $s_j$ is its training-set standard deviation, and $\widehat{\beta}_j$ is its fitted coefficient. The calculation is performed separately for valence and arousal. It shows which measured changes contribute to a difference in predicted mood.
+
+Because the models were trained on static excerpt labels, section comparisons will be exploratory. Independent section-level emotion annotations would be needed to evaluate whether predicted changes match listeners' perceptions.
+
+\paragraph{Status of the case-study analysis.}
+
+The recordings have been selected, but their acoustic measurements and predictions have not yet been computed. The completed analysis will include a table of excerpt timestamps and predicted scores, a figure locating the excerpts in the valence--arousal plane, and a comparison of their largest ridge contributions.
+
+These examples will illustrate how the fitted relationships apply to contrasting recordings. We will retain both agreement and disagreement with our initial interpretations, including emotional information that may depend on lyrics, musical context, or personal associations beyond the measured features.

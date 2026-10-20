@@ -1,19 +1,21 @@
 \section{Introduction}
 \label{sec:introduction}
 
-We both enjoy music, and some of our favorite songs combine an active beat with a mood we perceive as sad. These examples made us interested in how the emotional character of a recording relates to measurable properties of its sound. Our research question is:
+A recording can have a strong rhythmic pulse and still sound sad. This combination suggests that musical intensity and emotional positivity are distinct aspects of its emotional character. Examining them separately provides a way to study how measurable properties of sound relate to perceived emotion.
+
+Our research question is:
 \begin{quote}
 \textbf{How do acoustic features relate to the emotions we hear in music?}
 \end{quote}
 
-We study this question through valence and arousal. Valence describes emotional positivity, while arousal describes activation. Considering them separately allows us to investigate energetic recordings with a negative emotional character. Measurements such as tempo and amplitude will be predictors; the supplied emotion labels will be the responses.
+We represent emotional character through valence and arousal. Valence describes emotional positivity, while arousal describes activation. These dimensions allow a recording to have low valence and high arousal, giving us a framework for studying negative emotional character in music with an active beat.
 
-Our original project focused on electronic dance music (EDM). The metadata filters selected a broader range of electronic and dance-related recordings than we intended. During our subsequent review, we identified about seven recordings that matched our intended focus. This was our assessment of the reviewed candidates, rather than a count of every electronic recording in MERGE. We therefore broadened the question to music across genres.
+The project initially focused on electronic dance music (EDM). Reviewing the candidate recordings showed that broad electronic and dance-related metadata categories did not consistently match our intended genre definition. The limited sample meeting that definition motivated a broader study across genres. MERGE remains our primary dataset, and the revised analysis retains the same interest in interpretable acoustic measurements.
 
-The completed pilot uses 92 provisional candidates from the earlier selection. Its seven acoustic features describe amplitude, rhythm, brightness, spectral change, and bass-band content. Under grouped evaluation, ridge regression improved arousal prediction modestly but did not improve valence prediction over a training-mean baseline. Those findings concern the pilot sample. Preparing and evaluating the revised sample remains the next stage.
+The initial pilot used seven features describing amplitude, rhythm, and spectral content. Those models improved arousal prediction modestly but did not improve valence prediction over a training-mean baseline. We therefore examined a broader sample and added measurements of timbre and pitch-class content. The follow-up compares the original and expanded representations on the same eligible recordings.
 
-We begin with ordinary least squares and ridge regression because their predictions can be connected to named acoustic measurements. A possible LSTM extension will examine whether preserving the order of changes within an excerpt improves prediction. Source separation may also allow us to compare features from estimated vocals, bass, drums, and accompaniment.
+The results support prediction of both responses, although substantial variation remains unexplained. Expanded ridge regression connects individual measurements to predictions, while the random forest tests whether nonlinear relationships improve performance. A small long short-term memory network provides an additional comparison using ordered acoustic measurements.
 
-Finally, we will select two songs that we perceive as sad and compare written listening descriptions with their predicted valence and arousal. The feature contributions will help explain the model's behavior and reveal where it misses musical information that matters to us as listeners.
+Two case studies will connect these findings to recordings selected for contrasting perceived sadness and happiness. We will examine predicted valence and arousal, the features contributing to the ridge predictions, and differences between manually identified sections. These examples will help us assess how the statistical relationships correspond to observations about the music.
 
-Section~\ref{sec:literature} reviews the studies informing our approach. Section~\ref{sec:model} develops the models. The subsequent data, implementation, results, and conclusion sections retain the earlier pilot analysis while the broader study is prepared.
+Section~\ref{sec:literature} reviews the relevant literature. Section~\ref{sec:methodology} develops the mathematical models and describes the implementation. Section~\ref{sec:results} presents the completed analysis, and Section~\ref{sec:conclusion} discusses its implications and the remaining work.

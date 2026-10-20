@@ -163,6 +163,9 @@ Several limitations shape that interpretation. First, the 92 candidates include 
 '''
     replacements={'@PERFORMANCE_ROWS@':'\n'.join(table),'@ABLATION_ROWS@':'\n'.join(abtable),'@ABASE@':f"{a['training_mean']['rmse']:.4f}",'@ARIDGE@':f"{a['ridge']['rmse']:.4f}",'@IMPROVEMENT@':f'{improvement:.1f}','@AR2@':f"{a['ridge']['r2']:.3f}",'@VRIDGE@':f"{v['ridge']['rmse']:.4f}",'@VBASE@':f"{v['training_mean']['rmse']:.4f}",'@VR2@':f"{v['ridge']['r2']:.3f}",'@ARMIN@':f'{arange[0]:.3f}','@ARMAX@':f'{arange[1]:.3f}','@VRMIN@':f'{vrange[0]:.3f}','@VRMAX@':f'{vrange[1]:.3f}','@TVRMSE@':f"{tm['responses']['Valence']['rmse']:.4f}",'@TVR2@':f"{tm['responses']['Valence']['r2']:.3f}",'@TARMSE@':f"{tm['responses']['Arousal']['rmse']:.4f}",'@TAR2@':f"{tm['responses']['Arousal']['r2']:.3f}",'@ITVRMSE@':f"{tm['interior_responses']['Valence']['rmse']:.4f}",'@ITARMSE@':f"{tm['interior_responses']['Arousal']['rmse']:.4f}",'@TVCOUNT@':str(tempcounts['Valence']),'@TACOUNT@':str(tempcounts['Arousal'])}
     for key,value in replacements.items():text=text.replace(key,value)
-    (R/'03_4_results.tex').write_text(text)
+    pilot_dir = R/'pilot'
+    pilot_dir.mkdir(exist_ok=True)
+    (pilot_dir/'03_4_results.tex').write_text(text)
 
 if __name__=='__main__':main()
+

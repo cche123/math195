@@ -1,11 +1,40 @@
 \subsection{Implementation}
+\label{sec:implementation}
 
-The analysis is implemented in Python using NumPy, pandas, scikit-learn, matplotlib, and librosa. The primary pipeline reads the archived feature table, sorts records by song identifier, checks identifier uniqueness, and verifies that all predictors and responses are finite. It does not silently remove observations with missing or failed feature extraction. The script records a SHA-256 fingerprint of the feature input and the software versions in \texttt{results/metrics.json}.
+\subsubsection{Audio preparation and eligibility}
 
-For each response, the pipeline creates five outer group folds. Within each outer training set, three inner group folds evaluate nine ridge penalties. Standardization is recomputed inside every inner training partition, and the validation losses are pooled over the inner validation observations. The selected penalty is then used to refit on the outer training set and predict the outer test set. In scikit-learn, Ridge minimizes a sum of squared residuals plus $\alpha\|\bm\beta\|_2^2$. Our report uses mean squared residuals, so the implementation sets $\alpha=m\lambda$ separately for every training partition. The penalty scaling therefore agrees with the derivation in Section~\ref{sec:model}.
+The follow-up uses the official MERGE Audio Complete archive. Its MD5 checksum was verified before extraction. Metadata and numerical response tables were joined one-to-one using the \texttt{Song} identifier.
 
-Every observation receives one out-of-fold prediction in the primary evaluation. The saved prediction table includes the supplied responses, the fold identifier, the ridge prediction, and predictions from the training-mean baseline and ordinary least squares. Full-model and feature-family removal comparisons use the same outer folds. Each reduced model is retuned within its own outer training data. Ten outer split seeds, 195 through 204, examine sensitivity to group assignment. These repeated evaluations reuse the same observations; they are not ten independent datasets or a basis for an independent-sample confidence interval.
+The release contains 3,554 identifiers. For the completed evaluation, we excluded four records without artist credits, six additional records repeating normalized artist/title pairs, one further exact audio-file duplicate, and one excerpt that failed the minimum six-second extraction requirement. These rules leave 3,542 recordings and 1,755 normalized complete artist-credit groups.
 
-The temporal extraction processes the local audio into ten ordered bins per excerpt. Its output contains the acoustic profiles and five additional descriptors of temporal change. A separate script compares the resulting twelve-feature model with the primary seven-feature model. Figures are generated from saved predictions and coefficient tables. The code also exports full-sample primary refits as JSON for later external case-study predictions.
+Repeated artist/title pairs were handled conservatively by retaining the first identifier after sorting by \texttt{Song}. Exact audio duplicates were identified using file hashes. The eligibility decisions were recorded before evaluating the broader models.
 
-Three automated modeling tests check the mean-loss ridge solution against the normal equations, ensure that held-out data do not alter training standardization, and verify group separation and complete reproducible out-of-fold predictions. The original audit tests check metadata token matching and repeated identifiers. Assertions in the fitted analysis also check that feature contributions sum to each prediction minus its intercept.
+\subsubsection{Acoustic feature extraction}
+
+Audio was converted to mono at 22,050 samples per second. Spectral measurements used a short-time Fourier transform with a 2,048-sample window and a 512-sample hop.
+
+The initial seven features were retained for comparison. The expanded representation added the measurements in Table~\ref{tab:features}, producing 82 acoustic predictors. The pitch-class summaries describe chroma entropy, changes in chroma, and the triad-template contrast in Equation~\eqref{eq:triad}.
+
+For the LSTM, each excerpt was divided into ten equal-duration windows. Four acoustic measurements were calculated in each window, producing a sequence with ten time steps. These windows share the recording's overall response pair and are not treated as independently labeled examples.
+
+Artist, title, genre, mood tags, quadrant labels, and other emotion-derived metadata were excluded from the predictor matrices. Artist credits were used only to define evaluation groups. All retained acoustic measurements and response values were checked for missing or non-finite values.
+
+\subsubsection{Training and parameter selection}
+
+The primary evaluation used random seed 195. Each outer training partition was divided into three grouped inner folds. Standardization and model tuning used only the relevant training data.
+
+For each candidate parameter setting, inner validation errors were pooled across the three folds. The setting with the lowest pooled mean squared error was refitted on the outer training partition and used to predict the held-out outer fold.
+
+Random-forest tuning compared minimum leaf sizes of three and eight and feature fractions of $0.5$ and $1.0$. The RBF approximation compared penalties of $0.01$, $0.1$, $1$, and $10$ and kernel widths of $0.001$, $0.01$, and $0.1$. The LSTM used the fixed settings described in Section~\ref{sec:model}.
+
+We also evaluated a static-model selection procedure. Within each outer training partition, it selected among the candidate static model families using their inner validation scores. The outer test results were reserved for evaluation.
+
+\subsubsection{Checks and external-song refits}
+
+Checks confirmed that no normalized artist-credit group crossed an outer training/test boundary. Every evaluated model produced a held-out prediction for each retained recording and response. Expanded ridge was additionally evaluated using seeds 196 and 197 to examine sensitivity to group assignment.
+
+After evaluation, expanded ridge and random-forest models were refitted for later external-song predictions. Their training predictions were not used as estimates of predictive performance.
+
+The case-study procedure applies the same feature definitions to a selected excerpt, uses the saved training-based scaling, and reports predicted valence and arousal. Ridge contributions are calculated using Equation~\eqref{eq:contributions}. These terms explain the ridge output only and are not a decomposition of the random-forest prediction.
+
+The procedure also checks for known training identifiers, exact training-audio matches, and measurements outside the observed training ranges. Actual predictions for the two selected case-study songs remain pending.

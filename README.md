@@ -1,73 +1,61 @@
-# MATH 195: Music and Emotion
+# How Do Acoustic Features Relate to the Emotions We Hear in Music?
 
-**Caden Che and Kevin Zuniga | Stanford University**
+**Caden Che and Kevin Zuniga | MATH 195 | Stanford University**
 
-**Research question: How do acoustic features relate to the emotions we hear in music?**
+We study how measurements of recorded sound relate to emotional positivity and activation. A recording can sound energetic and sad at the same time, so we model **valence** and **arousal** separately. We evaluate acoustic relationships on held-out recordings and examine how they apply to individual songs.
 
-We both enjoy music, and some of our favorite songs sound energetic and sad at the same time. We want to understand how that combination shows up in the audio. Our project measures properties of a recording, such as amplitude, rhythm, brightness, and low-frequency content, and examines how they relate to its supplied emotion labels.
+## Data and scope
 
-We study two dimensions of emotion: **valence**, which describes positivity, and **arousal**, which describes activation. Keeping these separate lets us ask how a song can have an active beat and still have a negative emotional character.
+Our primary source is [MERGE Audio Complete, version 1.1.0](https://zenodo.org/records/13939205), with 3,554 excerpts, descriptive metadata, and supplied emotion labels. Predictors are extracted from audio; supplied valence and arousal scores are the responses. Mood tags and emotion-derived metadata are excluded from predictors. [DEAM](https://cvml.unige.ch/databases/DEAM/) was considered for its time-varying annotations but has not been pooled with MERGE.
 
-## Why we broadened the question
+We initially focused on EDM. Exact-token metadata filtering identified 543 Electronic-tagged excerpts and 92 provisional dance-style candidates. These tags included music outside our intended focus. Our review identified approximately seven recordings matching that narrower definition, motivating a broader study across genres. This is not a count of every electronic recording in MERGE.
 
-We originally focused on electronic dance music. The metadata audit found 543 Electronic-tagged excerpts in MERGE, and an additional dance-style filter selected 92 candidates. Those categories included experimental music, crossover recordings, and other styles outside the EDM focus we had in mind.
+## Current written report
 
-In our subsequent review, we identified about seven recordings that matched that intended focus. This is our assessment of the reviewed candidates, rather than a count of every electronic recording in MERGE. We decided to broaden the question to music across genres.
+The current report starts at [`Report/main.tex`](Report/main.tex). It follows the course's AMS article template with 11-point text, one-inch margins, one-and-a-half spacing, and a separate bibliography. Upload the contents of `Report/` to Overleaf and select `main.tex` as the main document. The figures in the current Results section are drawn directly in LaTeX.
 
-The existing data tables, models, and figures still come from the **earlier 92-recording pilot**. Updating the question does not turn those results into findings about the full MERGE dataset. Preparing and evaluating the broader sample is the next stage.
+The report describes the broader follow-up on 3,542 eligible recordings in 1,755 normalized complete artist-credit groups. It compares seven initial measurements with 82 features covering amplitude, rhythm, timbre, and pitch-class content.
 
-## Data and readings
+| Model | Valence RMSE | Valence R² | Arousal RMSE | Arousal R² |
+| --- | ---: | ---: | ---: | ---: |
+| Training mean | 0.2233 | -0.000 | 0.1347 | -0.005 |
+| Seven-feature OLS | 0.2129 | 0.091 | 0.1121 | 0.305 |
+| Seven-feature ridge | 0.2129 | 0.090 | 0.1121 | 0.304 |
+| Expanded ridge | 0.1980 | 0.213 | 0.1028 | 0.415 |
+| Expanded kernel approximation | 0.1957 | 0.232 | 0.1022 | 0.422 |
+| Expanded random forest | 0.1877 | 0.293 | 0.0956 | 0.494 |
+| Small LSTM | 0.2137 | 0.083 | 0.1111 | 0.317 |
 
-Our primary source is [MERGE Audio Complete, version 1.1.0](https://zenodo.org/records/13939205), which contains 3,554 audio excerpts with metadata and supplied emotion labels. We use the numerical valence and arousal responses. Mood tags and other information derived from those responses are excluded from the predictors.
+These values summarize the earlier executed follow-up documented in the report. Its broader feature tables, fitted models, full prediction outputs, and analysis scripts are not currently included in this repository. The checked-in scripts and data reproduce the earlier 92-recording pilot, not these broader results. The broader analysis is not yet reproducible from this checkout alone. No new broad-sample evaluation was performed in this update.
 
-We have also considered [DEAM](https://cvml.unige.ch/databases/DEAM/), which includes recording-level and time-varying emotion annotations. We have not combined it with MERGE.
+The evaluated representations predict arousal more strongly than valence. Added timbre and pitch-class measurements improve valence prediction. These are exploratory associations within MERGE. R² measures explained variation, not classification accuracy, and feature contributions do not establish causes of emotion.
 
-Several readings helped shape the project:
+## Case studies
 
-- [MERGE](https://arxiv.org/abs/2407.06060) provides the dataset and explains how its labels were constructed.
-- [Kang and Herremans' survey](https://arxiv.org/abs/2406.08809) helps us distinguish perceived emotion from induced emotion and overall labels from annotations over time.
-- [EmoMucs](https://archives.ismir.net/ismir2020/paper/000308.pdf) examines emotion prediction from separate musical sources.
-- [Solberg's study of buildups and drops](https://dj.dancecult.net/index.php/dancecult/article/view/451) motivated our interest in musical changes and contrasts.
-- [Demucs](https://arxiv.org/abs/2211.08553) and [MERT](https://arxiv.org/abs/2306.00107) offer possible extensions through source separation and learned audio representations.
+| Selected by | Recording | Initial description | Status |
+| --- | --- | --- | --- |
+| Caden | “Apocalypse” by Cigarettes After Sex | Sad | Excerpt and predictions pending |
+| Kevin | “Happy” by Pharrell Williams | Happy | Excerpt and predictions pending |
 
-The literature review in `Report/` discusses how these studies inform our choices and where their tasks differ from ours.
+The case-study text is in [`Report/03_5_case_studies.tex`](Report/03_5_case_studies.tex), included at the end of Results. The selections are recorded in [`data/case_studies.csv`](data/case_studies.csv). Empty timestamp fields are intentional.
 
-## What we measure
+We will document the recording versions, approximately 30-second excerpts, and listening descriptions before examining predictions. Training-recording overlap must be checked before treating either case as external. The broader random forest will provide a predictive comparison, while broader ridge refits will provide interpretable contributions once those artifacts are restored. Ridge contributions explain ridge predictions only.
 
-The pilot uses seven features extracted with librosa:
+We will also compare manually annotated sections where appropriate. Section predictions remain exploratory because the models were trained on static excerpt labels. Neither selected song has been analyzed yet.
 
-| Feature | What it describes |
-| --- | --- |
-| Mean RMS amplitude | Typical signal amplitude |
-| RMS standard deviation | Variation in amplitude |
-| Spectral centroid | Spectral brightness |
-| Bass-band power fraction | Relative power between 20 and 250 Hz |
-| Positive spectral flux | Changes in spectral magnitude |
-| Onsets per second | Rate of detected sound attacks |
-| Estimated tempo | Estimated beat rate in BPM |
+## Readings and extraction
 
-These are measurements of sound. The emotion responses come from the dataset's annotations. For example, tempo is a predictor, rather than our definition of arousal.
+- [MERGE](https://arxiv.org/abs/2407.06060): dataset construction and static emotion labels.
+- [Kang and Herremans](https://arxiv.org/abs/2406.08809): perceived versus induced emotion and evaluation challenges.
+- [EmoMucs](https://archives.ismir.net/ismir2020/paper/000308.pdf): emotion prediction from separated musical sources.
+- [Solberg](https://dj.dancecult.net/index.php/dancecult/article/view/451): expectations and intensity in EDM buildups and drops.
+- [Demucs](https://arxiv.org/abs/2211.08553) and [MERT](https://arxiv.org/abs/2306.00107): possible extensions through source separation and learned representations.
 
-Our starting models are ordinary least squares and ridge regression, fitted separately for valence and arousal. Ridge limits coefficient size when features contain overlapping information. We compare both models with a baseline that predicts the training mean.
+Completed extraction used the full mix and librosa. Demucs, MERT, and Essentia were considered but not used. Bass-band power is not an isolated bass instrument, and pitch-class features are not verified chord annotations.
 
-We also plan to examine consecutive windows with an LSTM and compare features from Demucs-estimated vocals, bass, drums, and accompaniment. **LSTM training and source separation have not been completed.** The current extraction uses the full mix and librosa; Essentia and MERT remain possible options.
+## Reproducing the earlier pilot
 
-## What the pilot found
-
-The 92-recording pilot uses five outer folds and three inner folds, grouped by normalized complete artist credits. Feature scaling and ridge tuning use only the relevant training partitions.
-
-| Response | Training-mean RMSE | Ridge RMSE | Ridge out-of-fold R² |
-| --- | ---: | ---: | ---: |
-| Valence | 0.1828 | 0.1873 | -0.0569 |
-| Arousal | 0.0992 | 0.0931 | 0.1180 |
-
-The initial features helped predict arousal modestly, but they did not improve valence prediction over the baseline. Removing brightness and spectral-change features made arousal prediction worse in all five primary folds. These comparisons describe predictive associations in this sample.
-
-An exploratory extension measured changes within ten consecutive bins. Its small improvements were inconsistent across alternative splits. These bins do not identify verified verses, choruses, buildups, or drops, and the recordings do not have separate emotion labels for each bin.
-
-## Reproducing the pilot
-
-Python 3.12 was used. From the repository root:
+The included tables contain seven features for 92 provisional dance-style candidates:
 
 ```sh
 python -m pip install -r requirements.txt
@@ -75,43 +63,33 @@ python -m unittest discover -s tests -v
 python scripts/run_all.py
 ```
 
-The included feature tables allow the numerical results and figures to be reproduced without downloading audio. Running the pipeline updates the pilot predictions, evaluation summaries, figures, and results section.
+The pipeline updates pilot outputs in `results/`, pilot figures, and `Report/pilot/03_4_results.tex`. It leaves the current report unchanged. The archived pilot document is `Report/pilot/main.tex`; select it explicitly in Overleaf if needed.
 
-To download the official audio and recompute the pilot features:
+To download audio and recompute the seven pilot features:
 
 ```sh
 python -m pip install -r requirements-audio.txt
 python scripts/download_audio.py
 python scripts/extract_features.py --audio-dir data/audio --metadata data/provisional_92_features.csv --out data/recomputed_features.csv
-python scripts/run_all.py
 ```
 
-The downloader still selects the pilot recordings. It does not prepare the revised sample across genres. The extraction uses mono audio at 22,050 Hz, a 2,048-sample Hann STFT, and a 512-sample hop. The seven recomputed features matched the stored pilot values in the earlier check. Source recordings are not redistributed here.
+The downloader selects pilot recordings, not the broader sample. Extraction uses mono audio at 22,050 Hz, a 2,048-sample Hann STFT, and a 512-sample hop. Source audio is not redistributed.
 
-To reproduce the original metadata selection from the official archive:
+To reproduce the metadata filtering:
 
 ```sh
 python scripts/audit_merge.py --archive data/raw/MERGE_Audio_Complete.zip --out audit_output
 ```
 
-## Report and case studies
+The original data-selection account remains unchanged at `Report/03_2_data_selection_audit.tex`. The current report includes `Report/03_2_data_collection.tex`, containing the introductory dataset discussion for Kevin to complete.
 
-The LaTeX report is in `Report/`. Upload that folder's contents to Overleaf and compile `main.tex`, keeping the bibliography and figures alongside it. The title, introduction, literature review, and model discussion reflect the revised question. The data, implementation, results, and conclusion sections retain the earlier pilot analysis and still need a coordinated update for the broader study.
-
-We will choose two songs that we perceive as sad, write listening descriptions before inspecting predictions, and examine how their measured features contribute to predicted valence and arousal. The current case-study script uses the saved pilot models:
-
-```sh
-python scripts/predict_case_study.py --features data/external_song_features.csv
-```
-
-Its input needs the seven named acoustic features. Predictions for the revised study will require refitting on the broader sample first.
-
-The section-analysis script currently accepts intro, buildup, drop, breakdown, core, and outro annotations:
+## Section measurements and pilot predictions
 
 ```sh
 python scripts/analyze_sections.py --annotations data/section_annotations.csv --audio-dir data/full_songs
+python scripts/predict_case_study.py --features data/external_song_features.csv
 ```
 
-Supporting other section names, such as verse, chorus, and bridge, requires an update to that script. Actual annotated-section results and our two personal case studies remain pending.
+Section annotations require `Song`, `start_seconds`, `end_seconds`, and `section`. Audio filenames must match `Song`. Supported labels include intro, verse, prechorus, chorus, bridge, interlude, buildup, drop, breakdown, core, and outro. Intervals must lie within the audio, be nonoverlapping, and span at least six seconds. This script extracts the original seven features.
 
-Our aim is to connect model predictions to properties we can hear and measure. A feature contribution explains part of a fitted prediction; it does not establish what caused a song to sound sad to a listener.
+The case predictor defaults to the saved **pilot** ridge models in `results/fitted_models.json`. Its outputs are not the expanded-model case studies described in the current report. The broader refits are required before completing that comparison.

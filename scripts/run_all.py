@@ -5,4 +5,5 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 for name in ['run_models.py','make_figures.py','run_temporal_analysis.py','make_temporal_figures.py','write_report.py']:
     subprocess.run([sys.executable,str(ROOT/'scripts'/name)],cwd=ROOT,check=True)
-print('All numerical outputs, figures and LaTeX regenerated. Compile Report/main.tex in Overleaf.')
+print('Pilot numerical outputs and figures regenerated. Pilot report: Report/pilot/main.tex. Current report: Report/main.tex; left unchanged.')
+
